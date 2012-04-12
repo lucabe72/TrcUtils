@@ -30,7 +30,7 @@ static void help(void)
 static unsigned int param(int argc, char *argv[], int *start_time, int *end_time)
 {
     int c;
-    while ((c = getopt(argc, argv, "C:E:S:s:e:i")) != -1)
+    while ((c = getopt(argc, argv, "C:E:S:s:e:id")) != -1)
 	switch (c) {
 	case 'C':
 	    break;
@@ -47,6 +47,9 @@ static unsigned int param(int argc, char *argv[], int *start_time, int *end_time
         case 'i':
             output_type = OUTPUT_INFO;
 	    break;
+        case 'd':
+            output_type = OUTPUT_DUMP;
+            break;
 	default:
 	    help();
 	    exit(2);
@@ -80,6 +83,7 @@ int main(int argc, char *argv[])
     char *fname;
     struct cpu *upc;
     struct trace *trac;
+    unsigned int idx[30] = {0};//FIXME!
 
     param(argc, argv,&start_time,&end_time);
 
@@ -110,19 +114,54 @@ int main(int argc, char *argv[])
     fprintf(stderr, "Step: %d\tScale: %d\n", step, scale);
 
     switch (output_type) {
-#if 0
         case OUTPUT_DUMP:
-            for(i = 0; i < trc->last_event; i++) {
-                printf("[%d]\t", i);
-                trace_dump_event(&trc->ev[i], trc->last_server);
+            done = 0;
+            i = 0;
+            while(!done) {
+                int min = -1;
+                int index;
+
+                for (j = 0; j < upc->cpus; j++) {
+                    trac = &upc->trc[j];
+                    if ((trac->last_server > 1) && (idx[j] < trac->last_event)) {
+                        if ((min == -1) || (trac->ev[idx[j]].time < min)) {
+                            min = trac->ev[idx[j]].time;
+                            index = j;
+                        }
+                    }
+                }
+                if (min == -1) {
+                    done = 1;
+                } else {
+                    printf("[%d - %d]\t", i++, index);
+                    trace_dump_event(&upc->trc[index].ev[idx[index]], upc->trc[index].last_server, index);
+                    idx[index]++;
+                }
             }
             break;
         case OUTPUT_TRACE:
-            for(i = 0; i < trc->last_event; i++) {
-                trace_write_event(&trc->ev[i], trc->last_server);
+            done = 0;
+            while(!done) {
+                int min = -1;
+                int index;
+
+                for (j = 0; j < upc->cpus; j++) {
+                    trac = &upc->trc[j];
+                    if ((trac->last_server > 1) && (idx[j] < trac->last_event)) {
+                        if ((min == -1) || (trac->ev[idx[j]].time < min)) {
+                            min = trac->ev[idx[j]].time;
+                            index = j;
+                        }
+                    }
+                }
+                if (min == -1) {
+                    done = 1;
+                } else {
+                    trace_write_event(&upc->trc[index].ev[idx[index]], upc->trc[index].last_server, index);
+                    idx[index]++;
+                }
             }
             break;
-#endif
         case OUTPUT_INFO:
             for (j = 0; j < upc->cpus; j++) {
                 if (upc->trc[j].last_server > 1) {

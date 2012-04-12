@@ -9,7 +9,7 @@
 #include "trace_evt_handle.h"
 #include "text_out.h"
 
-void trace_dump_event(struct event *e, int last_server)
+void trace_dump_event(struct event *e, int last_server, int cpu)
 {
   int j;
   const char *name;
@@ -34,8 +34,8 @@ void trace_dump_event(struct event *e, int last_server)
     case TASK_NAME:
       name = "Unknown";
       for (j = 0; j < last_server; j ++) {
-	if (srv_id(j, 0) == e->task) {		//FIXME
-	  name = srv_name(j, 0);		// FIXME
+	if (srv_id(j, cpu) == e->task) {
+	  name = srv_name(j, cpu);
 	}
       }
       //printf("Server %d (%s) created at time %"PRIu64"\n", e->task, name, e->time);
@@ -73,7 +73,7 @@ static void trace_write_common(int type, int time, int task)
   trace_write_int(task);
 }
 
-void trace_write_event(struct event *e, int last_server)
+void trace_write_event(struct event *e, int last_server, int cpu)
 {
   int j;
   const char *name;
@@ -88,8 +88,8 @@ void trace_write_event(struct event *e, int last_server)
     case TASK_NAME:
       name = "Unknown";
       for (j = 0; j < last_server; j ++) {
-	if (srv_id(j, 0) == e->task) {		//FIXME
-	  name = srv_name(j, 0);		//FIXME
+	if (srv_id(j, cpu) == e->task) {
+	  name = srv_name(j, cpu);
 	}
       }
       trace_write_int(strlen(name) + 1);
