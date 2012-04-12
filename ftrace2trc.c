@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
     FILE *f;
     //int start = 0, fc = 0, fo = 0, opt, i;
     int i;
-    long long int time = 0, res = 0;
+    long long int time = 0, res = 0, done = 0;
 
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
@@ -215,9 +215,10 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    while (res >= 0) {
+    while (!done) {
         time = res + 1;
         res = parse(f);
+        done = feof(f) || (res < 0);
     }
 
     endAllTask(time);
