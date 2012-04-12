@@ -133,11 +133,14 @@ static void endAllTask(int time)
     }
 }
 
-static int parse(FILE *f)
+static long long int parse(FILE *f)
 {
     char line[256];
+    char *res;
+    long long int current_time = -1;
 
-    while (fgets(line, sizeof(line), f)) {
+    res = fgets(line, sizeof(line), f);
+    if (res) {
         //char taskc[24], to, tasko[24], cstate, ostate, sched[6];
         char taskc[24], task_name[32];
         char event[32], attributes[256];
@@ -148,9 +151,8 @@ static int parse(FILE *f)
         unsigned long s, us;
         int i = 0;
 
+        current_time = 0;
 	if (line[0] != '#') {
-            unsigned long long int current_time;
-
             sscanf(line, "%[^[][%d]%lu.%lu:%s%[^!]",
 		       taskc, &cpu, &s, &us, event, attributes);
             dprintf("Task %s at %lu.%lu on CPU %d does %s (%s)\n", taskc, s, us, cpu, event, attributes);
@@ -181,7 +183,7 @@ static int parse(FILE *f)
 	}
     }
 
-    return 0;
+    return current_time;
 }
 
 
@@ -189,7 +191,8 @@ int main(int argc, char *argv[])
 {
     FILE *f;
     //int start = 0, fc = 0, fo = 0, opt, i;
-    int i, time;
+    int i;
+    long long int time = 0, res = 0;
 
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
@@ -212,9 +215,11 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    time = parse(f);
+    while (res >= 0) {
+        time = res + 1;
+        res = parse(f);
+    }
 
-    time++;
     endAllTask(time);
 
     destroyPidsFilter();
