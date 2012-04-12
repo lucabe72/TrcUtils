@@ -88,10 +88,9 @@ void label_plot(int n, const char *name, int y0)
     printf("%s\\001\n", name);
 }
 
-void header(void)
+void header_out(void)
 {
-    printf
-	("#FIG 3.2\nLandscape\nCenter\nMetric\nA4\n100.00\nSingle\n-2\n1200 2\n");
+    printf("#FIG 3.2\nLandscape\nCenter\nMetric\nA4\n100.00\nSingle\n-2\n1200 2\n");
 }
 
 void cpu_name(int cpu, int npidstot)
@@ -106,7 +105,7 @@ void cpu_name(int cpu, int npidstot)
     printf("%s\\001\n", name);
 }
 
-void yAX(int npids, int npidstot, int y0)
+void yax_draw(int npids, int npidstot, int y0)
 {
     /* Draw the Y ax... */
     y0 *= (npidstot - 1) * YSPACE + YAX + YBORDER;
@@ -163,7 +162,7 @@ static void arc_plot(int t1, int t2, int n, int scale, int y0)
 }
 
 void task_plot(struct event ev[], int i, int scale, int id, int tid,
-	       int ntot, int y0, int cpu, int ls, int min)
+	       int ntot, int y0, int cpu, int min)
 {
     int j;
     int start, stop, colour;
@@ -182,7 +181,8 @@ void task_plot(struct event ev[], int i, int scale, int id, int tid,
 	    case TASK_WAIT:
 		break;
 	    case TASK_NAME:
-		label_plot(tid, srv_name(tid, cpu, ls), y0);
+		//label_plot(tid, srv_name(tid, cpu, ls), y0);
+		label_plot(tid, srv_name(tid, cpu), y0);
 		break;
 	    case TASK_DLINEPOST:
 		arc_plot(ev[j].new_dl, ev[j].old_dl, tid, scale, y0);

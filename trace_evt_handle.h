@@ -1,7 +1,7 @@
 struct trace {
     struct event *ev;
     unsigned long int last_event;
-    int last_server;
+    unsigned int last_server;
 };
 
 struct cpu {
@@ -10,8 +10,8 @@ struct cpu {
 };
 
 int trace_read_event(void *h, struct cpu *upc, int start, int end);
-const char *srv_name(int i, int cpu, int ls);
+const char *srv_name(int i, int cpu);
 int last_time(struct cpu *upc);
-int srv_id(int i, int cpu, int ls);
+int srv_id(int i, int cpu);
 struct cpu *cpus_alloc(void);
 

@@ -12,10 +12,10 @@ struct server {
     int cpu;
 };
 
-
-#define MAX_SERVERS 800
+#define TASKS       100
 #define MAX_EVENTS 100000
 #define MAX_CPUS 8 //FIXME!
+#define MAX_SERVERS (TASKS * MAX_CPUS)
 
 
 static struct server srv[MAX_SERVERS];
@@ -148,10 +148,10 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
 		    return --trc->last_event;
 		}
 
-		srv[trc->last_server + (e->cpu * 100)].name =
+		srv[trc->last_server + (e->cpu * TASKS)].name =
 		    priv_srv[sid].name;
-		srv[trc->last_server + (e->cpu * 100)].id = e->task;
-		srv[trc->last_server + (e->cpu * 100)].cpu = e->cpu;
+		srv[trc->last_server + (e->cpu * TASKS)].id = e->task;
+		srv[trc->last_server + (e->cpu * TASKS)].cpu = e->cpu;
 
 		trc->last_server++;
 	    }
@@ -215,29 +215,14 @@ int last_time(struct cpu *upc)
     return max;
 }
 
-const char *srv_name(int i, int cpu, int ls)
+const char *srv_name(int i, int cpu)
 {
-    int j, found = -1;
-    for (j = 0; j < ls && found != i; j++) {
-	if (srv[j + (cpu * 100)].cpu == cpu) {
-	    found++;
-	}
-    }
-
-    return srv[found + (cpu * 100)].name;
+    return srv[i + (cpu * TASKS)].name;
 }
 
-int srv_id(int i, int cpu, int ls)
+int srv_id(int i, int cpu)
 {
-
-    int j, found = -1;
-    for (j = 0; j < ls && found != i; j++) {
-	if (srv[j + (cpu * 100)].cpu == cpu) {
-	    found++;
-	}
-    }
-
-    return srv[found + (cpu * 100)].id;
+    return srv[i + (cpu * TASKS)].id;
 }
 
 int servers(struct trace *trc)

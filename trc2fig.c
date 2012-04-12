@@ -4,7 +4,14 @@
 
 #include "event.h"
 #include "trace_evt_handle.h"
+#include "text_out.h"
 #include "xfig_out.h"
+
+/* FIXME! */
+#define OUTPUT_DUMP 1
+#define OUTPUT_INFO 2
+#define OUTPUT_TRACE 3
+
 
 static void help(void)
 {
@@ -69,6 +76,7 @@ int main(int argc, char *argv[])
     char *fname;
     struct cpu *upc;
     struct trace *trac;
+    int output_type = 0;
 
     param(argc, argv,&start_time,&end_time);
 
@@ -96,34 +104,54 @@ int main(int argc, char *argv[])
 
 
     step_compute(last_time(upc), &step, &scale);
+    fprintf(stderr, "Step: %d\tScale: %d\n", step, scale);
 
-    fprintf(stderr, "Printing...\n");
-    fprintf(stderr,
-	    "If you don't see a process: its beahviour is a sequence of events too far from time 0.\n");
+    switch (output_type) {
+#if 0
+        case OUTPUT_DUMP:
+            for(i = 0; i < trc->last_event; i++) {
+                printf("[%d]\t", i);
+                trace_dump_event(&trc->ev[i], trc->last_server);
+            }
+            break;
+        case OUTPUT_TRACE:
+            for(i = 0; i < trc->last_event; i++) {
+                trace_write_event(&trc->ev[i], trc->last_server);
+            }
+            break;
+#endif
+        case OUTPUT_INFO:
+            for (j = 0; j < upc->cpus; j++) {
+                if (upc->trc[j].last_server > 1) {
+                    trace_info(&upc->trc[j]);
+                }
+            }
+            break;
+        default:
+            fprintf(stderr, "Printing...\n");
+            fprintf(stderr,
+	            "If you don't see a process: its beahviour is a sequence of events too far from time 0.\n");
 
-    header();
+            header_out();
+            for (j = 0, z = 0; j < upc->cpus; j++) {
+                trac = &upc->trc[j];
+                last_server = trac->last_server;
+                if (last_server > 1) {	//last_server == 0 is idle
+                    fprintf(stderr, "CPU %d\n", z);
+                    yax_draw(last_server, last_server_tot, z);
+                    cpu_name(z, last_server_tot);
 
-    for (j = 0, z = 0; j < upc->cpus; j++) {
-	trac = &upc->trc[j];
-	last_server = trac->last_server;
-	if (last_server > 1) {	//last_server == 0 is idle
-	    fprintf(stderr, "CPU %d\n", z);
-
-	    yAX(last_server, last_server_tot, z);
-	    cpu_name(z, last_server_tot);
-
-	    for (i = 0; i < last_server; i++) {
-		fprintf(stderr, "\t%s\n", srv_name(i, j, last_server));
-		ax_draw(start_time,last_time(upc),
-			step, scale, i, (i == (last_server - 1)),
-			last_server_tot, z);
-		task_plot(trac->ev, trac->last_event, scale,
-			  srv_id(i, j, last_server), i, last_server_tot, z,
-			  j, last_server,start_time);
-	    }
-	    last_server_tot += last_server + 1;
-	    z++;
-	}
+                    for (i = 0; i < last_server; i++) {
+                        //fprintf(stderr, "\t%s\n", srv_name(i, j, last_server));
+                        fprintf(stderr, "\t%s\n", srv_name(i, j));
+                        ax_draw(start_time, last_time(upc), step, scale, i, (i == (last_server - 1)), last_server_tot, z);
+                        //task_plot(trac->ev, trac->last_event, scale, srv_id(i, j, last_server), i, last_server_tot, z, j, last_server,start_time);
+                        task_plot(trac->ev, trac->last_event, scale, srv_id(i, j), i, last_server_tot, z, j, start_time);
+	            }
+	            last_server_tot += last_server + 1;
+	            z++;
+                }
+            }
     }
 
     free(upc);
