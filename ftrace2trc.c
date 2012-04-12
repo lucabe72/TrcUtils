@@ -12,7 +12,6 @@
 struct new_pid {
     int pid;
     int cpu;
-    int state;
 };
 
 #define dprintf(...)
@@ -48,7 +47,6 @@ static int create(unsigned long long int time, int pid, const char *name, int cp
 				       ++count * sizeof(struct new_pid));
 	new_pids[count - 1].pid = pid;
 	new_pids[count - 1].cpu = cpu;
-	new_pids[count - 1].state = 0;
 
 	trc_creation(pid, name, cpu, time);
 	if (!existing) trc_activation(pid, cpu, time);
@@ -56,17 +54,6 @@ static int create(unsigned long long int time, int pid, const char *name, int cp
 	return 0;
     } else {
 	return 1;
-    }
-}
-
-static void setPidState(int pid, int cpu, int state)
-{
-    unsigned int i;
-
-    for (i = 0; i < count; i++) {
-	if (new_pids[i].pid == pid && new_pids[i].cpu == cpu) {
-	    new_pids[i].state = state;
-	}
     }
 }
 
@@ -121,8 +108,6 @@ static void trace(unsigned long long int time, int current_pid, const char *name
 	if (current_pid == 0) {
 	    cpu_events[cpu] = 1;
 	}
-	setPidState(current_pid, cpu, 1);
-	setPidState(prev_pid, cpu, 0);
 	last_pid_run[cpu] = current_pid;	//Last pid scheduled
 	trc_dispatch(prev_pid, current_pid, cpu, time);
         if (prev_state != 'R') {
@@ -136,11 +121,15 @@ static void endAllTask(int time)
     unsigned int i;
 
     for (i = 0; i < count; i++) {
+#if 0
         if (new_pids[i].state != 0) {	//1 - if it scheduled, it'll descheduled
             trc_force_desch(new_pids[i].pid, new_pids[i].cpu, time);
 	} else {		//else it'll stoped
 	    trc_force_deactivation(new_pids[i].pid, new_pids[i].cpu, time);
 	}
+#else
+	trc_force_deactivation(new_pids[i].pid, new_pids[i].cpu, time);
+#endif
     }
 }
 
