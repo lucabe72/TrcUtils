@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 {
     FILE *f;
     unsigned int j, z;
-    int res, done, i, last_server, last_server_tot = 0;
+    int done, i, last_server, last_server_tot = 0;
     int step, scale, start_time = 0, end_time = 0;
     char *fname;
     struct cpu *upc;
@@ -87,6 +87,8 @@ int main(int argc, char *argv[])
 
     done = 0;
     while (!done) {
+        int res;
+
 	res = trace_read_event(f, upc, start_time, end_time);
 	//done = feof(f) || (maxLastEvent(upc) >= MAX_EVENTS)
 	done = feof(f) || (res < 0);

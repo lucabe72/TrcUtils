@@ -77,14 +77,17 @@ int srv_find(struct server s[], int id, int cpu)
 
 int trace_read_event(void *h, struct cpu *upc, int start, int end)
 {
-    int type, time, task, cpu, i;
+    int type, time, task, cpu, i, res;
     struct event *e;
     struct trace *trc;
     static struct server priv_srv[MAX_SERVERS];
     static int last_priv_server;
     FILE *f = h;
 
-    trace_common(f, &type, &time, &task, &cpu);
+    res = trace_common(f, &type, &time, &task, &cpu);
+    if (res < 0) {
+        return res;
+    }
 
     if (cpu < 0 || cpu > MAX_CPUS) {
 	for (i = 0; i < MAX_CPUS; i++) {

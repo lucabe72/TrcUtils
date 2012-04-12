@@ -18,12 +18,17 @@ static uint32_t trace_read_int(FILE * f)
     return swap(sw);
 }
 
-void trace_common(FILE *f, int *type, int *time, int *task, int *cpu)
+int trace_common(FILE *f, int *type, int *time, int *task, int *cpu)
 {
     *type = trace_read_int(f);
     *time = trace_read_int(f);
     *task = trace_read_int(f);
     *cpu = trace_read_int(f);
+    if (feof(f)) {
+        return -1;
+    }
+
+    return 0;
 }
 
 char *task_name(FILE *f)

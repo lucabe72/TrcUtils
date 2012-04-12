@@ -96,14 +96,14 @@ void header(void)
 
 void cpu_name(int cpu, int npidstot)
 {
-    char *name=malloc(sizeof(char)*4);
+    char name[64];
+
     sprintf(name, "CPU %d", cpu);
     int y0 = cpu * ((npidstot - 1) * YSPACE + YAX + YBORDER);
 
     printf("4 2 0 50 0 0 12 0.0 4 135 345 ");
     printf("%d %d ", XAX, YSPACE + y0);
     printf("%s\\001\n", name);
-    free(name);
 }
 
 void yAX(int npids, int npidstot, int y0)
