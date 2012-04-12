@@ -12,6 +12,7 @@
 #define OUTPUT_INFO 2
 #define OUTPUT_TRACE 3
 
+static int output_type;
 
 static void help(void)
 {
@@ -29,7 +30,7 @@ static void help(void)
 static unsigned int param(int argc, char *argv[], int *start_time, int *end_time)
 {
     int c;
-    while ((c = getopt(argc, argv, "C:E:S:s:e:")) != -1)
+    while ((c = getopt(argc, argv, "C:E:S:s:e:i")) != -1)
 	switch (c) {
 	case 'C':
 	    break;
@@ -42,6 +43,9 @@ static unsigned int param(int argc, char *argv[], int *start_time, int *end_time
 	    break;
 	case 'e':
 	    *end_time = atoi(optarg);
+	    break;
+        case 'i':
+            output_type = OUTPUT_INFO;
 	    break;
 	default:
 	    help();
@@ -76,7 +80,6 @@ int main(int argc, char *argv[])
     char *fname;
     struct cpu *upc;
     struct trace *trac;
-    int output_type = 0;
 
     param(argc, argv,&start_time,&end_time);
 
@@ -123,7 +126,7 @@ int main(int argc, char *argv[])
         case OUTPUT_INFO:
             for (j = 0; j < upc->cpus; j++) {
                 if (upc->trc[j].last_server > 1) {
-                    trace_info(&upc->trc[j]);
+                    trace_info(&upc->trc[j], j);
                 }
             }
             break;
