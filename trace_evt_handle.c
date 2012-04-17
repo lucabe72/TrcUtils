@@ -142,8 +142,8 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
 		sid = srv_find(priv_srv, e->task, e->cpu);
 		if (sid < 0) {
 		    fprintf(stderr,
-			    "[%ld - %d] Error: cannot find task %d\n",
-			    trc->last_event, e->time, e->task);
+			    "[%ld - %d] Error: cannot find task %d %d\n",
+			    trc->last_event, e->time, e->task, e->cpu);
 
 		    return --trc->last_event;
 		}
