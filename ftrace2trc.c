@@ -4,6 +4,7 @@
 #include <malloc.h>
 #include <unistd.h>
 
+#include "event_create.h"
 #include "trace_write.h"
 #include "pid_filter.h"
 
@@ -15,6 +16,7 @@ struct new_pid {
 };
 
 #define dprintf(...)
+//#define dprintf printf
 
 static unsigned int count;
 static struct new_pid *new_pids;
@@ -48,8 +50,8 @@ static int create(unsigned long long int time, int pid, const char *name, int cp
 	new_pids[count - 1].pid = pid;
 	new_pids[count - 1].cpu = cpu;
 
-	trc_creation(pid, name, cpu, time);
-	if (!existing) trc_activation(pid, cpu, time);
+	evt_creation(pid, name, cpu, time);
+	if (!existing) evt_activation(pid, cpu, time);
 
 	return 0;
     } else {
@@ -94,7 +96,7 @@ static void trace(unsigned long long int time, int current_pid, const char *name
 {
     if (strcmp(event, "sched_wakeup:") == 0) {
         create(time, current_pid, name, cpu);
-        trc_activation(current_pid, cpu, time);
+        evt_activation(current_pid, cpu, time);
     }
     if (strcmp(event, "sched_switch:") == 0) {
         dprintf("Switch %d -> %d\n", prev_pid, current_pid);
@@ -109,9 +111,9 @@ static void trace(unsigned long long int time, int current_pid, const char *name
 	    cpu_events[cpu] = 1;
 	}
 	last_pid_run[cpu] = current_pid;	//Last pid scheduled
-	trc_dispatch(prev_pid, current_pid, cpu, time);
+	evt_dispatch(prev_pid, current_pid, cpu, time);
         if (prev_state != 'R') {
-            trc_deactivation(prev_pid, cpu, time);
+            evt_deactivation(prev_pid, cpu, time);
         }
     }
 }
@@ -128,7 +130,7 @@ static void endAllTask(int time)
 	    trc_force_deactivation(new_pids[i].pid, new_pids[i].cpu, time);
 	}
 #else
-	trc_force_deactivation(new_pids[i].pid, new_pids[i].cpu, time);
+	evt_force_deactivation(new_pids[i].pid, new_pids[i].cpu, time);
 #endif
     }
 }
@@ -162,11 +164,11 @@ static long long int parse(FILE *f)
             previous_pid = filterPid(previous_pid);
             if (start == 0) {
                 start = 1;
-                trc_start(current_time);
+                evt_start(current_time);
                 for (i = 0; i < MAX_CPUS; i++) {
                     create(current_time, 0, "idle\0", i);
                     cpu_events[i] = 0;
-                    trc_initialize(0, i, current_time);
+                    evt_initialize(0, i, current_time);
 		}
             }
 
@@ -175,7 +177,7 @@ static long long int parse(FILE *f)
                     create(current_time, current_pid, task_name, cpu);
 
                     last_pid_run[cpu] = current_pid;	//Last pid scheduled
-                    trc_dispatch(0, current_pid, cpu, current_time);
+                    evt_dispatch(0, current_pid, cpu, current_time);
                 }
             dprintf("%s", line);
             trace(current_time, current_pid, task_name, cpu, event, taskc, previous_pid, previous_state);
@@ -215,8 +217,14 @@ int main(int argc, char *argv[])
     }
 
     while (!done) {
+        struct event *e;
+
         time = res + 1;
         res = parse(f);
+        while (e = evt_get()) {
+          trc_write(e);
+          free(e);
+        }
         done = feof(f) || (res < 0);
     }
 

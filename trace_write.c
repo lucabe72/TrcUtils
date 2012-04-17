@@ -5,6 +5,7 @@
 
 #include "event.h"
 #include "trace_write.h"
+#include "event_create.h"	//FIXME!
 
 static unsigned long long int start_time;
 
@@ -90,3 +91,17 @@ void trc_start(unsigned long long int time)
     start_time = time;
 }
 
+void trc_write(struct event *e)
+{
+  if (e->type != TASK_NAME) {
+    trace_common(e->type, e->time, e->task, e->cpu);
+  } else {
+    const char *name = name_get(e->task, e->cpu);
+
+    if (name) {
+      trc_creation(e->task, name, e->cpu, e->time);
+    } else {
+      fprintf(stderr, "Unknown task %d %d!\n", e->task, e->cpu);
+    }
+  }
+}
