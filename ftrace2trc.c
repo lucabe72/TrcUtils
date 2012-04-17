@@ -170,8 +170,7 @@ static long long int parse(FILE *f)
 		}
             }
 
-//                if ((current_pid != 0) && (cpu_events[cpu] == 0)) {
-                if (cpu_events[cpu] == 0) {
+                if ((current_pid != 0) && (cpu_events[cpu] == 0)) {
                     cpu_events[cpu] = 1;
                     create(current_time, current_pid, task_name, cpu);
 
