@@ -4,6 +4,7 @@
 
 #include "trace_read.h"
 #include "event.h"
+#include "event_list.h"
 #include "trace_evt_handle.h"
 
 struct server {
@@ -56,6 +57,7 @@ struct cpu *cpus_alloc(void)
 	upc->trc[i].last_event = 0;
 	upc->trc[i].last_server = 0;
     }
+    upc->max = 0;
 
     return upc;
 }
@@ -77,8 +79,7 @@ int srv_find(struct server s[], int id, int cpu)
 
 int trace_read_event(void *h, struct cpu *upc, int start, int end)
 {
-    int type, time, task, cpu, i, res;
-    struct event *e;
+    int type, time, task, cpu, res, old_dl = 0, new_dl = 0;
     struct trace *trc;
     static struct server priv_srv[MAX_SERVERS];
     static int last_priv_server;
@@ -90,12 +91,6 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
     }
 
     if (cpu < 0 || cpu > MAX_CPUS) {
-	for (i = 0; i < MAX_CPUS; i++) {
-	    trc = &upc->trc[i];
-	    if (trc->last_event > 0) {
-		trc->last_event--;
-	    }
-	}
 	return -1;
     }
     if (upc->cpus < (unsigned int)cpu) {
@@ -113,45 +108,44 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
     if (trc->last_event == MAX_EVENTS) {
         return -2;
     }
+    
+    if ((end != 0) && (time > end)) {
+	return trc->last_event;
+    }
 
-    e = &trc->ev[trc->last_event];
-
-    e->type = type;
-    e->time = time;
-    e->task = task;
-    e->cpu = cpu;
-
-    switch (e->type) {
+    switch (type) {
     case TASK_END:
     case TASK_DESCHEDULE:
-	if (e->time >= start) {
-	    int sid = srv_find(srv, e->task, e->cpu);
+	if (time >= start) {
+	    int sid = srv_find(srv, task, cpu);
 
 	    if (sid >= 0) {
+                evt_store(type, time, task, cpu);
 		trc->last_event++;
 	    }
 	}
 	break;
     case TASK_ARRIVAL:
     case TASK_SCHEDULE:
-	if (e->time >= start) {
+	if (time >= start) {
+            evt_store(type, time, task, cpu);
 	    trc->last_event++;
-	    if (srv_find(srv, e->task, e->cpu) < 0) {
+	    if (srv_find(srv, task, cpu) < 0) {
 		int sid;
 
-		sid = srv_find(priv_srv, e->task, e->cpu);
+		sid = srv_find(priv_srv, task, cpu);
 		if (sid < 0) {
 		    fprintf(stderr,
 			    "[%ld - %d] Error: cannot find task %d %d\n",
-			    trc->last_event, e->time, e->task, e->cpu);
+			    trc->last_event, time, task, cpu);
 
-		    return --trc->last_event;
+		    return -3;
 		}
 
-		srv[trc->last_server + (e->cpu * TASKS)].name =
+		srv[trc->last_server + (cpu * TASKS)].name =
 		    priv_srv[sid].name;
-		srv[trc->last_server + (e->cpu * TASKS)].id = e->task;
-		srv[trc->last_server + (e->cpu * TASKS)].cpu = e->cpu;
+		srv[trc->last_server + (cpu * TASKS)].id = task;
+		srv[trc->last_server + (cpu * TASKS)].cpu = cpu;
 
 		trc->last_server++;
 	    }
@@ -159,34 +153,37 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
 	break;
     case TASK_NAME:
 	priv_srv[last_priv_server].name = task_name(f);
-	priv_srv[last_priv_server].id = e->task;
-	priv_srv[last_priv_server].cpu = e->cpu;
+	priv_srv[last_priv_server].id = task;
+	priv_srv[last_priv_server].cpu = cpu;
 
 	//fprintf(stderr, "cpu %d - %s\n", e->cpu, priv_srv[last_priv_server].name);
 
 	last_priv_server++;
 
-	e->time = start;
+	time = start;
 	trc->last_event++;
+        evt_store(type, time, task, cpu);
 	break;
     case TASK_DLINEPOST:
-	e->old_dl = task_dline(f);
+	old_dl = task_dline(f);
     case TASK_DLINESET:
-	e->new_dl = task_dline(f);
-	if (e->time >= start) {
-	    if (srv_find(srv, e->task, e->cpu) >= 0) {
+	new_dl = task_dline(f);
+	if (time >= start) {
+	    if (srv_find(srv, task, cpu) >= 0) {
 		trc->last_event++;
 	    }
 	}
+        evt_store_dl(type, time, task, cpu, old_dl, new_dl);
 	break;
     default:
-	fprintf(stderr, "[%ld] Strange event type %d\n", trc->last_event,
-		e->type);
-	trc->last_event--;
-	return -1;
+	fprintf(stderr, "[%ld] Strange event type %d\n", trc->last_event, type);
+	return -4;
     }
-    if ((end != 0) && (e->time > end)) {
-	trc->last_event--;
+    if (new_dl > upc->max) {
+      upc->max = new_dl;
+    }
+    if (time > upc->max) {
+      upc->max = time;
     }
 
     return trc->last_event;
@@ -194,25 +191,7 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
 
 int last_time(struct cpu *upc)
 {
-    unsigned int i, j;
-    int max = 0;
-    struct trace *trc;
-    struct event *e;
-
-    for (j = 0; j < MAX_CPUS; j++) {
-	trc = &upc->trc[j];
-	e = trc->ev;
-	for (i = 0; i < trc->last_event; i++) {
-	    if (e[i].new_dl > max) {
-		max = e[i].new_dl;
-	    }
-	    if (e[i].time > max) {
-		max = e[i].time;
-	    }
-	}
-    }
-
-    return max;
+    return upc->max;
 }
 
 const char *srv_name(int i, int cpu)

@@ -7,6 +7,7 @@ struct trace {
 struct cpu {
     struct trace *trc;
     unsigned int cpus;
+    int max;
 };
 
 int trace_read_event(void *h, struct cpu *upc, int start, int end);

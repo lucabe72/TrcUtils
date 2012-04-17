@@ -3,6 +3,7 @@
 #include <getopt.h>
 
 #include "event.h"
+#include "event_list.h"
 #include "trace_evt_handle.h"
 #include "text_out.h"
 #include "xfig_out.h"
@@ -83,7 +84,6 @@ int main(int argc, char *argv[])
     char *fname;
     struct cpu *upc;
     struct trace *trac;
-    unsigned int idx[30] = {0};//FIXME!
 
     param(argc, argv,&start_time,&end_time);
 
@@ -118,51 +118,45 @@ int main(int argc, char *argv[])
             done = 0;
             i = 0;
             while(!done) {
-                int min = -1;
-                int index;
+                struct event *e;
 
-                for (j = 0; j < upc->cpus; j++) {
-                    trac = &upc->trc[j];
-                    if ((trac->last_server > 1) && (idx[j] < trac->last_event)) {
-                        if ((min == -1) || (trac->ev[idx[j]].time < min)) {
-                            min = trac->ev[idx[j]].time;
-                            index = j;
-                        }
-                    }
-                }
-                if (min == -1) {
+                e = evt_get();
+                if (e == NULL) {
                     done = 1;
                 } else {
-                    printf("[%d - %d]\t", i++, index);
-                    trace_dump_event(&upc->trc[index].ev[idx[index]], upc->trc[index].last_server, index);
-                    idx[index]++;
+                    printf("[%d - %d]\t", i++, e->cpu);
+                    trace_dump_event(e, upc->trc[e->cpu].last_server, e->cpu);
                 }
             }
             break;
         case OUTPUT_TRACE:
             done = 0;
             while(!done) {
-                int min = -1;
-                int index;
+                struct event *e;
 
-                for (j = 0; j < upc->cpus; j++) {
-                    trac = &upc->trc[j];
-                    if ((trac->last_server > 1) && (idx[j] < trac->last_event)) {
-                        if ((min == -1) || (trac->ev[idx[j]].time < min)) {
-                            min = trac->ev[idx[j]].time;
-                            index = j;
-                        }
-                    }
-                }
-                if (min == -1) {
+                e = evt_get();
+                if (e == NULL) {
                     done = 1;
                 } else {
-                    trace_write_event(&upc->trc[index].ev[idx[index]], upc->trc[index].last_server, index);
-                    idx[index]++;
+                    trace_write_event(e, upc->trc[e->cpu].last_server, e->cpu);
                 }
             }
             break;
         case OUTPUT_INFO:
+            done = 0;
+            for (j = 0; j < upc->cpus; j++) {
+                upc->trc[j].last_event = 0;
+            }
+            while(!done) {
+                struct event *e;
+
+                e = evt_get();
+                if (e == NULL) {
+                    done = 1;
+                } else {
+                    upc->trc[e->cpu].ev[upc->trc[e->cpu].last_event++] = *e;
+                }
+            }
             for (j = 0; j < upc->cpus; j++) {
                 if (upc->trc[j].last_server > 1) {
                     trace_info(&upc->trc[j], j);
@@ -175,6 +169,20 @@ int main(int argc, char *argv[])
 	            "If you don't see a process: its beahviour is a sequence of events too far from time 0.\n");
 
             header_out();
+            done = 0;
+            for (j = 0; j < upc->cpus; j++) {
+                upc->trc[j].last_event = 0;
+            }
+            while(!done) {
+                struct event *e;
+
+                e = evt_get();
+                if (e == NULL) {
+                    done = 1;
+                } else {
+                    upc->trc[e->cpu].ev[upc->trc[e->cpu].last_event++] = *e;
+                }
+            }
             for (j = 0, z = 0; j < upc->cpus; j++) {
                 trac = &upc->trc[j];
                 last_server = trac->last_server;
