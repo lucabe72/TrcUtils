@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
                     done = 1;
                 } else {
                     printf("[%d - %d]\t", i++, e->cpu);
-                    trace_dump_event(e, servers(e->cpu), e->cpu);
+                    trace_dump_event(e, servers(e->cpu));
                 }
             }
             break;
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
                 if (e == NULL) {
                     done = 1;
                 } else {
-                    trace_write_event(e, servers(e->cpu), e->cpu);
+                    trace_write_event(e, servers(e->cpu));
                 }
             }
             break;
@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
             for (j = 0; j < cpus; j++) {
                 if (servers(j) > 1) {
-                    trace_info(t[j].ev, t[j].last_event, servers(j), j);
+                    trace_info(t[j].ev, t[j].last_event, servers(j));
                 }
             }
             break;

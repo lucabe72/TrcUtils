@@ -9,7 +9,7 @@
 #include "trace_evt_handle.h"
 #include "text_out.h"
 
-void trace_dump_event(struct event *e, int last_server, int cpu)
+void trace_dump_event(struct event *e, int last_server)
 {
   int j;
   const char *name;
@@ -34,8 +34,8 @@ void trace_dump_event(struct event *e, int last_server, int cpu)
     case TASK_NAME:
       name = "Unknown";
       for (j = 0; j < last_server; j ++) {
-	if (srv_id(j, cpu) == e->task) {
-	  name = srv_name(j, cpu);
+	if (srv_id(j, e->cpu) == e->task) {
+	  name = srv_name(j, e->cpu);
 	}
       }
       //printf("Server %d (%s) created at time %"PRIu64"\n", e->task, name, e->time);
@@ -73,7 +73,7 @@ static void trace_write_common(int type, int time, int task)
   trace_write_int(task);
 }
 
-void trace_write_event(struct event *e, int last_server, int cpu)
+void trace_write_event(struct event *e, int last_server)
 {
   int j;
   const char *name;
@@ -88,8 +88,8 @@ void trace_write_event(struct event *e, int last_server, int cpu)
     case TASK_NAME:
       name = "Unknown";
       for (j = 0; j < last_server; j ++) {
-	if (srv_id(j, cpu) == e->task) {
-	  name = srv_name(j, cpu);
+	if (srv_id(j, e->cpu) == e->task) {
+	  name = srv_name(j, e->cpu);
 	}
       }
       trace_write_int(strlen(name) + 1);
@@ -106,12 +106,12 @@ void trace_write_event(struct event *e, int last_server, int cpu)
   }
 }
 
-void trace_info(struct event *ev, unsigned int last_event, unsigned int last_server, int cpu)
+void trace_info(struct event *ev, unsigned int last_event, unsigned int last_server)
 {
   unsigned int i, j;
   int first, last;
 
-  printf("CPU %d\n", cpu);
+  printf("CPU %d\n", ev[0].cpu);
   printf("\tNumber of events: %u\n", last_event);
   //printf("First event time: %"PRIu64"\n", trc->ev[0].time);
   //printf("Last event time: %"PRIu64"\n", trc->ev[trc->last_event].time);
@@ -119,10 +119,10 @@ void trace_info(struct event *ev, unsigned int last_event, unsigned int last_ser
   printf("\tLast event time: %d\n", ev[last_event].time);
   printf("\tNumber of servers: %u\n\n", last_server);
   for (i = 0; i < last_server; i++) {
-    printf("\tServer %d: %s\n", i, srv_name(i, cpu));
+    printf("\tServer %d: %s\n", i, srv_name(i, ev[0].cpu));
     first = -1; last = -1;
     for (j = 0; j < last_event; j++) {
-      if (ev[j].task == srv_id(i, cpu)) {
+      if (ev[j].task == srv_id(i, ev[0].cpu)) {
         last = j;
 	if (first == -1) {
           first = j;
