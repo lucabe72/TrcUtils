@@ -12,7 +12,7 @@ trc2fig: trc2fig.o trace_read.o trace_evt_handle.o xfig_out.o text_out.o event_l
 
 stats: stats.o trace_read.o trace_evt_handle.o stats_utils.o event_list.o
 
-ftrace2trc: ftrace2trc.o event_create.o event_list.o trace_write.o pid_filter.o
+ftrace2trc: ftrace2trc.o event_create.o event_list.o trace_write.o pid_filter.o task_names.o
 
 clean:
 	rm -f $(APPS) *.o

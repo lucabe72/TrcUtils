@@ -1,5 +1,4 @@
 struct event *evt_get(void);
-const char *name_get(int pid, int cpu);
 void evt_dispatch(int lpid, int rpid, int cpu, unsigned long long int time);
 void evt_force_desch(int pid, int cpu, unsigned long long int time);
 void evt_initialize(int pid, int cpu, unsigned long long int time);
