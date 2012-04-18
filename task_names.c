@@ -42,3 +42,18 @@ const char *name_get(int pid, int cpu)
 
   return NULL;
 }
+
+int task_ith(int i, int cpu)
+{
+  int j, cnt = 0;
+
+  for (j = 0; j < MAX_TASKS; j++) { 
+    if (task[j].name && (task[j].cpu == cpu)) {
+      if (cnt++ == i) {
+        return task[j].pid;
+      }
+    }
+  }
+
+  return -1;
+}

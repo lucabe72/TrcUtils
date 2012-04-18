@@ -5,6 +5,7 @@
 #include "trace_read.h"
 #include "event.h"
 #include "event_list.h"
+#include "task_names.h"
 #include "trace_evt_handle.h"
 
 struct server {
@@ -18,8 +19,6 @@ struct server {
 #define MAX_CPUS 8 //FIXME!
 #define MAX_SERVERS (TASKS * MAX_CPUS)
 
-
-static struct server srv[MAX_SERVERS];
 static int last_server[MAX_CPUS];
 static int max;
 
@@ -70,9 +69,9 @@ int trace_read_event(void *h, int start, int end)
     case TASK_END:
     case TASK_DESCHEDULE:
 	if (time >= start) {
-	    int sid = srv_find(srv, task, cpu);
+	    const char *t = name_get(task, cpu);
 
-	    if (sid >= 0) {
+	    if (t) {
                 evt_store(type, time, task, cpu);
 	    }
 	}
@@ -81,7 +80,7 @@ int trace_read_event(void *h, int start, int end)
     case TASK_SCHEDULE:
 	if (time >= start) {
             evt_store(type, time, task, cpu);
-	    if (srv_find(srv, task, cpu) < 0) {
+	    if (name_get(task, cpu) == NULL) {
 		int sid;
 
 		sid = srv_find(priv_srv, task, cpu);
@@ -91,12 +90,7 @@ int trace_read_event(void *h, int start, int end)
 
 		    return -3;
 		}
-
-		srv[last_server[cpu] + (cpu * TASKS)].name =
-		    priv_srv[sid].name;
-		srv[last_server[cpu] + (cpu * TASKS)].id = task;
-		srv[last_server[cpu] + (cpu * TASKS)].cpu = cpu;
-
+                name_register(task, cpu, priv_srv[sid].name);
 		last_server[cpu]++;
 	    }
 	}
@@ -118,7 +112,7 @@ int trace_read_event(void *h, int start, int end)
     case TASK_DLINESET:
 	new_dl = task_dline(f);
 	if (time >= start) {
-	    if (srv_find(srv, task, cpu) < 0) {
+	    if (name_get(task, cpu) == NULL) {
               return -5;
 	    }
 	}
@@ -145,19 +139,12 @@ int last_time(void)
 
 const char *srv_name(int task, int cpu)
 {
-    int i;
-
-    i = srv_find(srv, task, cpu);
-    if (i >= 0) {
-        return srv[i].name;
-    }
-
-    return NULL;
+    return name_get(task, cpu);
 }
 
 int srv_id(int i, int cpu)
 {
-    return srv[i + (cpu * TASKS)].id;
+    return task_ith(i, cpu);
 }
 
 int servers(int cpu)
