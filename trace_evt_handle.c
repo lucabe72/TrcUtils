@@ -43,17 +43,6 @@ struct cpu *cpus_alloc(void)
     }
 
     for (i = 0; i < MAX_CPUS; i++) {
-	upc->trc[i].ev = malloc(sizeof(struct event) * MAX_EVENTS);
-
-	if (upc->trc[i].ev == NULL) {
-	    perror("Malloc(ev)");
-	    free(upc);
-	    free(upc->trc);
-
-	    return NULL;
-	}
-
-	memset(upc->trc[i].ev, 0, sizeof(struct event) * MAX_EVENTS);
 	upc->trc[i].last_event = 0;
 	upc->trc[i].last_server = 0;
     }

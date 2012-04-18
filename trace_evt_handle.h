@@ -1,5 +1,4 @@
 struct trace {
-    struct event *ev;
     unsigned long int last_event;
     unsigned int last_server;
 };

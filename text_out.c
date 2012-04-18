@@ -106,23 +106,23 @@ void trace_write_event(struct event *e, int last_server, int cpu)
   }
 }
 
-void trace_info(struct trace *trc, int cpu)
+void trace_info(struct event *ev, int last_event, int last_server, int cpu)
 {
   unsigned int i, j;
   int first, last;
 
   printf("CPU %d\n", cpu);
-  printf("\tNumber of events: %lu\n", trc->last_event);
+  printf("\tNumber of events: %lu\n", last_event);
   //printf("First event time: %"PRIu64"\n", trc->ev[0].time);
   //printf("Last event time: %"PRIu64"\n", trc->ev[trc->last_event].time);
-  printf("\tFirst event time: %d\n", trc->ev[0].time);
-  printf("\tLast event time: %d\n", trc->ev[trc->last_event].time);
-  printf("\tNumber of servers: %d\n\n", trc->last_server);
-  for (i = 0; i < trc->last_server; i++) {
+  printf("\tFirst event time: %d\n", ev[0].time);
+  printf("\tLast event time: %d\n", ev[last_event].time);
+  printf("\tNumber of servers: %d\n\n", last_server);
+  for (i = 0; i < last_server; i++) {
     printf("\tServer %d: %s\n", i, srv_name(i, cpu));
     first = -1; last = -1;
-    for (j = 0; j < trc->last_event; j++) {
-      if (trc->ev[j].task == srv_id(i, cpu)) {
+    for (j = 0; j < last_event; j++) {
+      if (ev[j].task == srv_id(i, cpu)) {
         last = j;
 	if (first == -1) {
           first = j;
@@ -132,8 +132,8 @@ void trace_info(struct trace *trc, int cpu)
     //printf("\tFirst event (%d) at time %"PRIu64"\n", first, trc->ev[first].time);
     //printf("\tLast event (%d) at time %"PRIu64"\n", last, trc->ev[last].time);
     if (first >= 0 && last >= 0) {
-        printf("\t\tFirst event (%d) at time %d\n", first, trc->ev[first].time);
-        printf("\t\tLast event (%d) at time %d\n", last, trc->ev[last].time);
+        printf("\t\tFirst event (%d) at time %d\n", first, ev[first].time);
+        printf("\t\tLast event (%d) at time %d\n", last, ev[last].time);
     } else {
         printf("\t\tNo events: first=%d last=%d\n", first, last);
     }

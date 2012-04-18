@@ -8,12 +8,20 @@
 #include "text_out.h"
 #include "xfig_out.h"
 
+#define MAX_EVENTS 10000
+#define MAX_CPUS 16
+
 /* FIXME! */
 #define OUTPUT_DUMP 1
 #define OUTPUT_INFO 2
 #define OUTPUT_TRACE 3
 
 static int output_type;
+
+struct my_trace {
+  struct event ev[MAX_EVENTS];
+  int last_event;
+};
 
 static void help(void)
 {
@@ -83,7 +91,7 @@ int main(int argc, char *argv[])
     int step, scale, start_time = 0, end_time = 0;
     char *fname;
     struct cpu *upc;
-    struct trace *trac;
+    static struct my_trace t[MAX_CPUS];
 
     param(argc, argv,&start_time,&end_time);
 
@@ -144,9 +152,6 @@ int main(int argc, char *argv[])
             break;
         case OUTPUT_INFO:
             done = 0;
-            for (j = 0; j < upc->cpus; j++) {
-                upc->trc[j].last_event = 0;
-            }
             while(!done) {
                 struct event *e;
 
@@ -154,12 +159,12 @@ int main(int argc, char *argv[])
                 if (e == NULL) {
                     done = 1;
                 } else {
-                    upc->trc[e->cpu].ev[upc->trc[e->cpu].last_event++] = *e;
+                    t[e->cpu].ev[t[e->cpu].last_event++] = *e;
                 }
             }
             for (j = 0; j < upc->cpus; j++) {
                 if (upc->trc[j].last_server > 1) {
-                    trace_info(&upc->trc[j], j);
+                    trace_info(t[j].ev, t[j].last_event, upc->trc[j].last_server, j);
                 }
             }
             break;
@@ -170,9 +175,6 @@ int main(int argc, char *argv[])
 
             header_out();
             done = 0;
-            for (j = 0; j < upc->cpus; j++) {
-                upc->trc[j].last_event = 0;
-            }
             while(!done) {
                 struct event *e;
 
@@ -180,12 +182,11 @@ int main(int argc, char *argv[])
                 if (e == NULL) {
                     done = 1;
                 } else {
-                    upc->trc[e->cpu].ev[upc->trc[e->cpu].last_event++] = *e;
+                    t[e->cpu].ev[t[e->cpu].last_event++] = *e;
                 }
             }
             for (j = 0, z = 0; j < upc->cpus; j++) {
-                trac = &upc->trc[j];
-                last_server = trac->last_server;
+                last_server = upc->trc[j].last_server;
                 if (last_server > 1) {	//last_server == 0 is idle
                     fprintf(stderr, "CPU %d\n", z);
                     yax_draw(last_server, last_server_tot, z);
@@ -196,7 +197,7 @@ int main(int argc, char *argv[])
                         fprintf(stderr, "\t%s\n", srv_name(i, j));
                         ax_draw(start_time, last_time(upc), step, scale, i, (i == (last_server - 1)), last_server_tot, z);
                         //task_plot(trac->ev, trac->last_event, scale, srv_id(i, j, last_server), i, last_server_tot, z, j, last_server,start_time);
-                        task_plot(trac->ev, trac->last_event, scale, srv_id(i, j), i, last_server_tot, z, j, start_time);
+                        task_plot(t[j].ev, t[j].last_event, scale, srv_id(i, j), i, last_server_tot, z, j, start_time);
 	            }
 	            last_server_tot += last_server + 1;
 	            z++;
