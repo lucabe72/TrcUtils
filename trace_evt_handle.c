@@ -20,11 +20,11 @@ struct server {
 
 
 static struct server srv[MAX_SERVERS];
+static int last_server[MAX_CPUS];
 
 struct cpu *cpus_alloc(void)
 {
     struct cpu *upc;
-    int i;
 
     upc = malloc(sizeof(struct cpu));
     if (upc == NULL) {
@@ -34,18 +34,6 @@ struct cpu *cpus_alloc(void)
     }
 
     upc->cpus = 0;
-    upc->trc = malloc(sizeof(struct trace) * MAX_CPUS);
-    if (upc->trc == NULL) {
-	perror("Malloc(trc)");
-	free(upc);
-
-	return NULL;
-    }
-
-    for (i = 0; i < MAX_CPUS; i++) {
-	upc->trc[i].last_event = 0;
-	upc->trc[i].last_server = 0;
-    }
     upc->max = 0;
 
     return upc;
@@ -69,7 +57,6 @@ int srv_find(struct server s[], int id, int cpu)
 int trace_read_event(void *h, struct cpu *upc, int start, int end)
 {
     int type, time, task, cpu, res, old_dl = 0, new_dl = 0;
-    struct trace *trc;
     static struct server priv_srv[MAX_SERVERS];
     static int last_priv_server;
     FILE *f = h;
@@ -93,13 +80,8 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
 	type = TASK_DESCHEDULE;
     }
 
-    trc = &upc->trc[cpu];
-    if (trc->last_event == MAX_EVENTS) {
-        return -2;
-    }
-    
     if ((end != 0) && (time > end)) {
-	return trc->last_event;
+	return 0;
     }
 
     switch (type) {
@@ -110,7 +92,6 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
 
 	    if (sid >= 0) {
                 evt_store(type, time, task, cpu);
-		trc->last_event++;
 	    }
 	}
 	break;
@@ -118,25 +99,23 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
     case TASK_SCHEDULE:
 	if (time >= start) {
             evt_store(type, time, task, cpu);
-	    trc->last_event++;
 	    if (srv_find(srv, task, cpu) < 0) {
 		int sid;
 
 		sid = srv_find(priv_srv, task, cpu);
 		if (sid < 0) {
 		    fprintf(stderr,
-			    "[%ld - %d] Error: cannot find task %d %d\n",
-			    trc->last_event, time, task, cpu);
+			    "[%d] Error: cannot find task %d %d\n", time, task, cpu);
 
 		    return -3;
 		}
 
-		srv[trc->last_server + (cpu * TASKS)].name =
+		srv[last_server[cpu] + (cpu * TASKS)].name =
 		    priv_srv[sid].name;
-		srv[trc->last_server + (cpu * TASKS)].id = task;
-		srv[trc->last_server + (cpu * TASKS)].cpu = cpu;
+		srv[last_server[cpu] + (cpu * TASKS)].id = task;
+		srv[last_server[cpu] + (cpu * TASKS)].cpu = cpu;
 
-		trc->last_server++;
+		last_server[cpu]++;
 	    }
 	}
 	break;
@@ -150,7 +129,6 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
 	last_priv_server++;
 
 	time = start;
-	trc->last_event++;
         evt_store(type, time, task, cpu);
 	break;
     case TASK_DLINEPOST:
@@ -158,14 +136,14 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
     case TASK_DLINESET:
 	new_dl = task_dline(f);
 	if (time >= start) {
-	    if (srv_find(srv, task, cpu) >= 0) {
-		trc->last_event++;
+	    if (srv_find(srv, task, cpu) < 0) {
+              return -5;
 	    }
 	}
         evt_store_dl(type, time, task, cpu, old_dl, new_dl);
 	break;
     default:
-	fprintf(stderr, "[%ld] Strange event type %d\n", trc->last_event, type);
+	fprintf(stderr, "Strange event type %d\n", type);
 	return -4;
     }
     if (new_dl > upc->max) {
@@ -175,7 +153,7 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
       upc->max = time;
     }
 
-    return trc->last_event;
+    return 0;
 }
 
 int last_time(struct cpu *upc)
@@ -193,8 +171,8 @@ int srv_id(int i, int cpu)
     return srv[i + (cpu * TASKS)].id;
 }
 
-int servers(struct trace *trc)
+int servers(int cpu)
 {
-    return trc->last_server;
+    return last_server[cpu];
 }
 

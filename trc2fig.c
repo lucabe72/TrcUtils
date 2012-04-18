@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
                     done = 1;
                 } else {
                     printf("[%d - %d]\t", i++, e->cpu);
-                    trace_dump_event(e, upc->trc[e->cpu].last_server, e->cpu);
+                    trace_dump_event(e, servers(e->cpu), e->cpu);
                 }
             }
             break;
@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
                 if (e == NULL) {
                     done = 1;
                 } else {
-                    trace_write_event(e, upc->trc[e->cpu].last_server, e->cpu);
+                    trace_write_event(e, servers(e->cpu), e->cpu);
                 }
             }
             break;
@@ -148,8 +148,8 @@ int main(int argc, char *argv[])
             t = trace_export(&cpus);
 
             for (j = 0; j < cpus; j++) {
-                if (upc->trc[j].last_server > 1) {
-                    trace_info(t[j].ev, t[j].last_event, upc->trc[j].last_server, j);
+                if (servers(j) > 1) {
+                    trace_info(t[j].ev, t[j].last_event, servers(j), j);
                 }
             }
             break;
@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
             header_out();
             t = trace_export(&cpus);
             for (j = 0, z = 0; j < cpus; j++) {
-                last_server = upc->trc[j].last_server;
+                last_server = servers(j);
                 if (last_server > 1) {	//last_server == 0 is idle
                     fprintf(stderr, "CPU %d\n", z);
                     yax_draw(last_server, last_server_tot, z);
