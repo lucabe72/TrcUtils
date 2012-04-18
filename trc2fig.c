@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
                     done = 1;
                 } else {
                     printf("[%d - %d]\t", i++, e->cpu);
-                    trace_dump_event(e, servers(e->cpu));
+                    trace_dump_event(e);
                 }
             }
             break;
@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
                 if (e == NULL) {
                     done = 1;
                 } else {
-                    trace_write_event(e, servers(e->cpu));
+                    trace_write_event(e);
                 }
             }
             break;
@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
 
                     for (i = 0; i < last_server; i++) {
                         //fprintf(stderr, "\t%s\n", srv_name(i, j, last_server));
-                        fprintf(stderr, "\t%s\n", srv_name(i, j));
+                        fprintf(stderr, "\t%s\n", srv_name(srv_id(i, j), j));
                         ax_draw(start_time, last_time(), step, scale, i, (i == (last_server - 1)), last_server_tot, z);
                         //task_plot(trac->ev, trac->last_event, scale, srv_id(i, j, last_server), i, last_server_tot, z, j, last_server,start_time);
                         task_plot(t[j].ev, t[j].last_event, scale, srv_id(i, j), i, last_server_tot, z, j, start_time);

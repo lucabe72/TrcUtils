@@ -9,9 +9,8 @@
 #include "trace_evt_handle.h"
 #include "text_out.h"
 
-void trace_dump_event(struct event *e, int last_server)
+void trace_dump_event(struct event *e)
 {
-  int j;
   const char *name;
 
   switch (e->type) {
@@ -32,11 +31,9 @@ void trace_dump_event(struct event *e, int last_server)
       printf("Server %d blocks at time %d\n", e->task, e->time);
       break;
     case TASK_NAME:
-      name = "Unknown";
-      for (j = 0; j < last_server; j ++) {
-	if (srv_id(j, e->cpu) == e->task) {
-	  name = srv_name(j, e->cpu);
-	}
+      name = srv_name(e->task, e->cpu);
+      if (name == NULL) {
+        name = "Unknown";
       }
       //printf("Server %d (%s) created at time %"PRIu64"\n", e->task, name, e->time);
       printf("Server %d (%s) created at time %d\n", e->task, name, e->time);
@@ -73,9 +70,8 @@ static void trace_write_common(int type, int time, int task)
   trace_write_int(task);
 }
 
-void trace_write_event(struct event *e, int last_server)
+void trace_write_event(struct event *e)
 {
-  int j;
   const char *name;
 
   trace_write_common(e->type, e->time, e->task);
@@ -86,11 +82,9 @@ void trace_write_event(struct event *e, int last_server)
     case TASK_ARRIVAL:
       break;
     case TASK_NAME:
-      name = "Unknown";
-      for (j = 0; j < last_server; j ++) {
-	if (srv_id(j, e->cpu) == e->task) {
-	  name = srv_name(j, e->cpu);
-	}
+      name = srv_name(e->task, e->cpu);
+      if (name == NULL) {
+        name = "Unknown";
       }
       trace_write_int(strlen(name) + 1);
       fwrite(name, strlen(name) + 1, 1, stdout);
@@ -119,7 +113,7 @@ void trace_info(struct event *ev, unsigned int last_event, unsigned int last_ser
   printf("\tLast event time: %d\n", ev[last_event].time);
   printf("\tNumber of servers: %u\n\n", last_server);
   for (i = 0; i < last_server; i++) {
-    printf("\tServer %d: %s\n", i, srv_name(i, ev[0].cpu));
+    printf("\tServer %d: %s\n", i, srv_name(srv_id(i, ev[0].cpu), ev[0].cpu));
     first = -1; last = -1;
     for (j = 0; j < last_event; j++) {
       if (ev[j].task == srv_id(i, ev[0].cpu)) {

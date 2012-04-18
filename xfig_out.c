@@ -182,7 +182,7 @@ void task_plot(struct event ev[], int i, int scale, int id, int tid,
 		break;
 	    case TASK_NAME:
 		//label_plot(tid, srv_name(tid, cpu, ls), y0);
-		label_plot(tid, srv_name(tid, cpu), y0);
+		label_plot(tid, srv_name(id, cpu), y0);
 		break;
 	    case TASK_DLINEPOST:
 		arc_plot(ev[j].new_dl, ev[j].old_dl, tid, scale, y0);

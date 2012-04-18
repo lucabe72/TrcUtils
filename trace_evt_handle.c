@@ -23,7 +23,7 @@ static struct server srv[MAX_SERVERS];
 static int last_server[MAX_CPUS];
 static int max;
 
-int srv_find(struct server s[], int id, int cpu)
+static int srv_find(struct server s[], int id, int cpu)
 {
     int i = 0;
 
@@ -143,9 +143,16 @@ int last_time(void)
     return max;
 }
 
-const char *srv_name(int i, int cpu)
+const char *srv_name(int task, int cpu)
 {
-    return srv[i + (cpu * TASKS)].name;
+    int i;
+
+    i = srv_find(srv, task, cpu);
+    if (i >= 0) {
+        return srv[i].name;
+    }
+
+    return NULL;
 }
 
 int srv_id(int i, int cpu)
