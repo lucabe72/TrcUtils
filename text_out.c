@@ -106,18 +106,18 @@ void trace_write_event(struct event *e, int last_server, int cpu)
   }
 }
 
-void trace_info(struct event *ev, int last_event, int last_server, int cpu)
+void trace_info(struct event *ev, unsigned int last_event, unsigned int last_server, int cpu)
 {
   unsigned int i, j;
   int first, last;
 
   printf("CPU %d\n", cpu);
-  printf("\tNumber of events: %lu\n", last_event);
+  printf("\tNumber of events: %u\n", last_event);
   //printf("First event time: %"PRIu64"\n", trc->ev[0].time);
   //printf("Last event time: %"PRIu64"\n", trc->ev[trc->last_event].time);
   printf("\tFirst event time: %d\n", ev[0].time);
   printf("\tLast event time: %d\n", ev[last_event].time);
-  printf("\tNumber of servers: %d\n\n", last_server);
+  printf("\tNumber of servers: %u\n\n", last_server);
   for (i = 0; i < last_server; i++) {
     printf("\tServer %d: %s\n", i, srv_name(i, cpu));
     first = -1; last = -1;
