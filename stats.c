@@ -15,18 +15,12 @@ int main(int argc, char *argv[])
     int res, done;
     int start_time = 0, end_time = 0;
     char *fname;
-    struct cpu *upc;
 
     unsigned int tolerance = 0, time_back;
     FILE *l = NULL;
 
 
 l = fopen("test.txt", "w");
-
-    upc = cpus_alloc();
-    if (upc == NULL) {
-       return -1;
-    }
 
     fname = argv[argc - 1];
     f = fopen(fname, "r");
@@ -38,7 +32,7 @@ l = fopen("test.txt", "w");
 
     done = 0;
     while (!done) {
-	res = trace_read_event(f, upc, start_time, end_time);
+	res = trace_read_event(f, start_time, end_time);
 	done = feof(f) || (res < 0);
     }
 
@@ -96,6 +90,5 @@ l = fopen("test.txt", "w");
       }
     }
 
-    free(upc);
     return 0;
 }

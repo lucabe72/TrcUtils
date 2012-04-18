@@ -84,15 +84,9 @@ int main(int argc, char *argv[])
     int done, i, last_server, last_server_tot = 0;
     int step, scale, start_time = 0, end_time = 0;
     char *fname;
-    struct cpu *upc;
     struct event_trace *t;
 
     param(argc, argv,&start_time,&end_time);
-
-    upc = cpus_alloc();
-    if (upc == NULL) {
-       return -1;
-    }
 
     fname = argv[argc-1];
     f = fopen(fname, "r");
@@ -106,13 +100,13 @@ int main(int argc, char *argv[])
     while (!done) {
         int res;
 
-	res = trace_read_event(f, upc, start_time, end_time);
+	res = trace_read_event(f, start_time, end_time);
 	//done = feof(f) || (maxLastEvent(upc) >= MAX_EVENTS)
 	done = feof(f) || (res < 0);
     }
 
 
-    step_compute(last_time(upc), &step, &scale);
+    step_compute(last_time(), &step, &scale);
     fprintf(stderr, "Step: %d\tScale: %d\n", step, scale);
 
     switch (output_type) {
@@ -170,7 +164,7 @@ int main(int argc, char *argv[])
                     for (i = 0; i < last_server; i++) {
                         //fprintf(stderr, "\t%s\n", srv_name(i, j, last_server));
                         fprintf(stderr, "\t%s\n", srv_name(i, j));
-                        ax_draw(start_time, last_time(upc), step, scale, i, (i == (last_server - 1)), last_server_tot, z);
+                        ax_draw(start_time, last_time(), step, scale, i, (i == (last_server - 1)), last_server_tot, z);
                         //task_plot(trac->ev, trac->last_event, scale, srv_id(i, j, last_server), i, last_server_tot, z, j, last_server,start_time);
                         task_plot(t[j].ev, t[j].last_event, scale, srv_id(i, j), i, last_server_tot, z, j, start_time);
 	            }
@@ -180,6 +174,5 @@ int main(int argc, char *argv[])
             }
     }
 
-    free(upc);
     return 0;
 }

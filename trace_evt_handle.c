@@ -21,25 +21,7 @@ struct server {
 
 static struct server srv[MAX_SERVERS];
 static int last_server[MAX_CPUS];
-
-struct cpu *cpus_alloc(void)
-{
-    struct cpu *upc;
-
-    upc = malloc(sizeof(struct cpu));
-    if (upc == NULL) {
-	perror("Malloc(upc)");
-
-        return NULL;
-    }
-
-    upc->cpus = 0;
-    upc->max = 0;
-
-    return upc;
-}
-
-
+static int max;
 
 int srv_find(struct server s[], int id, int cpu)
 {
@@ -54,7 +36,7 @@ int srv_find(struct server s[], int id, int cpu)
     return -1;
 }
 
-int trace_read_event(void *h, struct cpu *upc, int start, int end)
+int trace_read_event(void *h, int start, int end)
 {
     int type, time, task, cpu, res, old_dl = 0, new_dl = 0;
     static struct server priv_srv[MAX_SERVERS];
@@ -69,9 +51,9 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
     if (cpu < 0 || cpu > MAX_CPUS) {
 	return -1;
     }
-    if (upc->cpus < (unsigned int)cpu) {
-        upc->cpus = cpu;
-    }
+//    if (upc->cpus < (unsigned int)cpu) {
+//        upc->cpus = cpu;
+//    }
 
 //When the trace has finished I want to stop all the tasks running
     if (type == TASK_FORCE_END) {
@@ -146,19 +128,19 @@ int trace_read_event(void *h, struct cpu *upc, int start, int end)
 	fprintf(stderr, "Strange event type %d\n", type);
 	return -4;
     }
-    if (new_dl > upc->max) {
-      upc->max = new_dl;
+    if (new_dl > max) {
+      max = new_dl;
     }
-    if (time > upc->max) {
-      upc->max = time;
+    if (time > max) {
+      max = time;
     }
 
     return 0;
 }
 
-int last_time(struct cpu *upc)
+int last_time(void)
 {
-    return upc->max;
+    return max;
 }
 
 const char *srv_name(int i, int cpu)
