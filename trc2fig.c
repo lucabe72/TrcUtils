@@ -9,7 +9,6 @@
 #include "xfig_out.h"
 
 #define MAX_EVENTS 10000
-#define MAX_CPUS 16
 
 /* FIXME! */
 #define OUTPUT_DUMP 1
@@ -17,11 +16,6 @@
 #define OUTPUT_TRACE 3
 
 static int output_type;
-
-struct my_trace {
-  struct event ev[MAX_EVENTS];
-  int last_event;
-};
 
 static void help(void)
 {
@@ -86,12 +80,12 @@ static unsigned long int maxLastEvent(struct cpu *upc)
 int main(int argc, char *argv[])
 {
     FILE *f;
-    unsigned int j, z;
+    unsigned int j, z, cpus;
     int done, i, last_server, last_server_tot = 0;
     int step, scale, start_time = 0, end_time = 0;
     char *fname;
     struct cpu *upc;
-    static struct my_trace t[MAX_CPUS];
+    struct event_trace *t;
 
     param(argc, argv,&start_time,&end_time);
 
@@ -151,18 +145,9 @@ int main(int argc, char *argv[])
             }
             break;
         case OUTPUT_INFO:
-            done = 0;
-            while(!done) {
-                struct event *e;
+            t = trace_export(&cpus);
 
-                e = evt_get();
-                if (e == NULL) {
-                    done = 1;
-                } else {
-                    t[e->cpu].ev[t[e->cpu].last_event++] = *e;
-                }
-            }
-            for (j = 0; j < upc->cpus; j++) {
+            for (j = 0; j < cpus; j++) {
                 if (upc->trc[j].last_server > 1) {
                     trace_info(t[j].ev, t[j].last_event, upc->trc[j].last_server, j);
                 }
@@ -174,18 +159,8 @@ int main(int argc, char *argv[])
 	            "If you don't see a process: its beahviour is a sequence of events too far from time 0.\n");
 
             header_out();
-            done = 0;
-            while(!done) {
-                struct event *e;
-
-                e = evt_get();
-                if (e == NULL) {
-                    done = 1;
-                } else {
-                    t[e->cpu].ev[t[e->cpu].last_event++] = *e;
-                }
-            }
-            for (j = 0, z = 0; j < upc->cpus; j++) {
+            t = trace_export(&cpus);
+            for (j = 0, z = 0; j < cpus; j++) {
                 last_server = upc->trc[j].last_server;
                 if (last_server > 1) {	//last_server == 0 is idle
                     fprintf(stderr, "CPU %d\n", z);
