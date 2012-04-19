@@ -64,23 +64,6 @@ static unsigned int param(int argc, char *argv[], int *start_time, int *end_time
    return 0;
 }
 
-/*
-static unsigned long int maxLastEvent(struct cpu *upc)
-{
-    unsigned long int max = 0;
-    int i;
-    struct trace *trc;
-
-    for (i = 0; i < MAX_CPUS; i++) {
-	    trc = &upc->trc[i];
-	    if (trc->last_event > max) {
-		max = trc->last_event;
-	    }
-	}
-    return max;
-}
-*/
-
 int main(int argc, char *argv[])
 {
     FILE *f;
@@ -105,7 +88,6 @@ int main(int argc, char *argv[])
         int res;
 
 	res = trace_read_event(f, start_time, end_time);
-	//done = feof(f) || (maxLastEvent(upc) >= MAX_EVENTS)
 	done = feof(f) || (res < 0);
     }
 
@@ -166,10 +148,8 @@ int main(int argc, char *argv[])
                     cpu_name(z, last_server_tot);
 
                     for (i = 0; i < last_server; i++) {
-                        //fprintf(stderr, "\t%s\n", srv_name(i, j, last_server));
                         fprintf(stderr, "\t%s\n", srv_name(srv_id(i, j), j));
                         ax_draw(start_time, last_time(), step, scale, i, (i == (last_server - 1)), last_server_tot, z);
-                        //task_plot(trac->ev, trac->last_event, scale, srv_id(i, j, last_server), i, last_server_tot, z, j, last_server,start_time);
                         task_plot(t[j].ev, t[j].last_event, scale, srv_id(i, j), i, last_server_tot, z, j, start_time);
 	            }
 	            last_server_tot += last_server + 1;
