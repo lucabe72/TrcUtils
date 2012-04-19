@@ -63,18 +63,19 @@ static void trace_write_int(int val)
   sw = htonl(val);
   fwrite(&sw, sizeof(int), 1, stdout);
 }
-static void trace_write_common(int type, int time, int task)
+static void trace_write_common(int type, int time, int task, int cpu)
 {
   trace_write_int(type);
   trace_write_int(time);
   trace_write_int(task);
+  trace_write_int(cpu);
 }
 
 void trace_write_event(struct event *e)
 {
   const char *name;
 
-  trace_write_common(e->type, e->time, e->task);
+  trace_write_common(e->type, e->time, e->task, e->cpu);
   switch (e->type) {
     case TASK_END:
     case TASK_DESCHEDULE:
@@ -86,6 +87,7 @@ void trace_write_event(struct event *e)
       if (name == NULL) {
         name = "Unknown";
       }
+fprintf(stderr, "Creating task %d %d - %s\n", e->task, e->cpu, name); 
       trace_write_int(strlen(name) + 1);
       fwrite(name, strlen(name) + 1, 1, stdout);
       break;

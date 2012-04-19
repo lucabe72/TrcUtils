@@ -33,7 +33,7 @@ static void help(void)
 static unsigned int param(int argc, char *argv[], int *start_time, int *end_time)
 {
     int c;
-    while ((c = getopt(argc, argv, "C:E:S:s:e:id")) != -1)
+    while ((c = getopt(argc, argv, "C:E:S:s:e:idt")) != -1)
 	switch (c) {
 	case 'C':
 	    break;
@@ -52,6 +52,9 @@ static unsigned int param(int argc, char *argv[], int *start_time, int *end_time
 	    break;
         case 'd':
             output_type = OUTPUT_DUMP;
+            break;
+        case 't':
+            output_type = OUTPUT_TRACE;
             break;
 	default:
 	    help();
