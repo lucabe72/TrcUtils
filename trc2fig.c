@@ -7,6 +7,7 @@
 #include "trace_evt_handle.h"
 #include "text_out.h"
 #include "xfig_out.h"
+#include "trace_write.h"
 
 #define MAX_EVENTS 10000
 
@@ -137,7 +138,7 @@ int main(int argc, char *argv[])
                 if (e == NULL) {
                     done = 1;
                 } else {
-                    trace_write_event(e);
+                    trc_write(e);
                 }
             }
             break;

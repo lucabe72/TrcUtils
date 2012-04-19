@@ -56,52 +56,6 @@ void trace_dump_event(struct event *e)
   }
 }
 
-static void trace_write_int(int val)
-{
-  int sw;
-
-  sw = htonl(val);
-  fwrite(&sw, sizeof(int), 1, stdout);
-}
-static void trace_write_common(int type, int time, int task, int cpu)
-{
-  trace_write_int(type);
-  trace_write_int(time);
-  trace_write_int(task);
-  trace_write_int(cpu);
-}
-
-void trace_write_event(struct event *e)
-{
-  const char *name;
-
-  trace_write_common(e->type, e->time, e->task, e->cpu);
-  switch (e->type) {
-    case TASK_END:
-    case TASK_DESCHEDULE:
-    case TASK_SCHEDULE:
-    case TASK_ARRIVAL:
-      break;
-    case TASK_NAME:
-      name = srv_name(e->task, e->cpu);
-      if (name == NULL) {
-        name = "Unknown";
-      }
-fprintf(stderr, "Creating task %d %d - %s\n", e->task, e->cpu, name); 
-      trace_write_int(strlen(name) + 1);
-      fwrite(name, strlen(name) + 1, 1, stdout);
-      break;
-    case TASK_DLINEPOST:
-      trace_write_int(e->old_dl);
-    case TASK_DLINESET:
-      trace_write_int(e->new_dl);
-      break;
-    default:
-      fprintf(stderr, "Strange event type %d\n", e->type);
-      break;
-  }
-}
-
 void trace_info(struct event *ev, unsigned int last_event, unsigned int last_server)
 {
   unsigned int i, j;

@@ -65,24 +65,13 @@ void trc_force_deactivation(int pid, int cpu, unsigned long long int time)
 void trc_creation(int pid, const char *name, int cpu,
 		  unsigned long long int time)
 {
-    int utime;
-    int len, i, j;
-    char name_pid[25], name_support[16];
-
-    for (i = 0, j = 0; j < 15 && name[i] != '\0'; i++) {
-	if (name[i] != ' ') {
-	    name_support[j++] = name[i];
-	}
-    }
-    name_support[j] = '\0';
+    int utime, len;
 
     utime = time - start_time;
     trace_common(TASK_NAME, utime, pid, cpu);
-    sprintf(name_pid, "%s*%d", name_support, pid);
-    //fprintf(stderr, "cpu %d - %s\n", cpu, name_pid);
-    len = strlen(name_pid);
+    len = strlen(name);
     trace_log_int(len);
-    write(1, name_pid, len);
+    write(1, name, len);
     //fprintf(stdout, "%d %s\n", len, name_pid);
 }
 
@@ -104,4 +93,10 @@ void trc_write(struct event *e)
       fprintf(stderr, "Unknown task %d %d!\n", e->task, e->cpu);
     }
   }
+#if 0		//FIXME: handle deadline events!
+    case TASK_DLINEPOST:
+      trace_write_int(e->old_dl);
+    case TASK_DLINESET:
+      trace_write_int(e->new_dl);
+#endif
 }
