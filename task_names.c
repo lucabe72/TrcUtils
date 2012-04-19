@@ -15,9 +15,9 @@ static struct task task[MAX_TASKS];
 
 void name_register(int pid, int cpu, const char *name)
 {
-  int i = 0;
+  int i;
 
-  while (i < MAX_TASKS) {
+  for (i = 0; i < MAX_TASKS; i++) {
     if (task[i].name == NULL) {
       task[i].name = strdup(name);
       task[i].pid = pid;
@@ -25,19 +25,17 @@ void name_register(int pid, int cpu, const char *name)
 
       return;
     }
-    i++;
   }
 }
 
 const char *name_get(int pid, int cpu)
 {
-  int i = 0;
+  int i;
 
-  while (i < MAX_TASKS) {
+  for (i = 0; i < MAX_TASKS; i++) {
     if (task[i].name && (task[i].cpu == cpu) && (task[i].pid == pid)) {
       return task[i].name;
     }
-    i++;
   }
 
   return NULL;
