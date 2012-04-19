@@ -6,6 +6,7 @@
 #include "event_list.h"
 #include "trace_evt_handle.h"
 #include "stats_utils.h"
+#include "stats_events.h"
 
 #define TIME_PERC 1000000
 
