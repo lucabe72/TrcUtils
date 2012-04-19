@@ -1,8 +1,3 @@
-#include <netinet/in.h>		/* htonl */
-#include <sys/types.h>
-#include <inttypes.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
 
 #include "event.h"
