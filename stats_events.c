@@ -192,6 +192,6 @@ printf("Util %d (%d) = %f\n", i, tasks[i].name, t);
 	}
 	a /= tasks[i].cpus_util_size;
 	//encod_stats_cpu(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
-	stats_print_float(l, time, tasks[i].name, CPU_UTILIZ, (int)t, w, a);
+	stats_print_float(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
     }
 }
