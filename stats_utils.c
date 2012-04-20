@@ -19,6 +19,13 @@ struct record {
 #define RECORD_RESPONSE  1
 #define RECORD_EXECUTION 2
 
+static const char *stat_name[] = {
+  "exec",
+  "resp",
+  "intr",
+  "util",
+};
+
 static struct record *updateRecord(unsigned long int time,
 				   unsigned long int tollerance,
                                    struct record *r)
@@ -124,15 +131,28 @@ float cdf_intervalls(int pid, unsigned long int time)
   return cdf_generic(pid, time, RECORD_UNBLOCK);
 }
 
-void encod_stats_time(void *l, unsigned long int time, int task,
-		      int kind_stat, unsigned long int time_i,
-		      unsigned long int pdf, float cdf)
+void stats_print_int(void *l, unsigned long int time, int task,
+                     int type, unsigned long int val,
+                     unsigned long int pdf, float cdf)
 {
     if (l == NULL) {
         return;
     }
 
     //fprintf(l, "%ld %d %s %d %ld %ld %d\n", time, task, getTaskName(task), kind_stat, time_i, pdf, cdf);
-    fprintf(l, "%ld %d %d %ld %ld %f\n", time, task, kind_stat, time_i,
+    fprintf(l, "%ld %d %s %lu %ld %f\n", time, task, stat_name[type], val,
 	    pdf, cdf);
 }
+
+void stats_print_float(void *l, unsigned long int time, int task,
+                       int type, float cpu, float cpuw, float cpua)
+{
+  if (l == NULL) {
+    return;
+  }
+
+    //fprintf(l, "%ld %d %s %d %f %f %f\n", time, task, getTaskName(task), cpu_stat, cpu, cpuw, cpua);
+  fprintf(l, "%ld %d %s %f %f %f\n", time, task, stat_name[type], cpu, cpuw, cpua);
+}
+
+

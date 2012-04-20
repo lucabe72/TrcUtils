@@ -12,9 +12,11 @@ unsigned long int pdf_executions(int pid, unsigned long int time,
 float cdf_response_time(int pid, unsigned long int time);
 
 
-void encod_stats_time(void *l, unsigned long int time, int task,
-		      int kind_stat, unsigned long int time_i,
+void stats_print_int(void *l, unsigned long int time, int task,
+		      int type, unsigned long int val,
 		      unsigned long int pdf, float cdf);
+void stats_print_float(void *l, unsigned long int time, int task,
+                       int type, float cpu, float cpuw, float cpua);
 
 float cdf_executions(int pid, unsigned long int time);
 

@@ -16,37 +16,34 @@ static FILE *l;
 
 static void stats_event_handle(const struct event *e)
 {
-  unsigned long int instant, pdf;
+  unsigned long int r, c, it, pdf;
   double cdf;
   static unsigned int time_back;
 
   switch (e->type) {
     case TASK_END:
           //Blocks
-          instant = response_time(e->task, e->time);
-          pdf = pdf_response_time(e->task, instant, tolerance);
+          r = response_time(e->task, e->time);
+          pdf = pdf_response_time(e->task, r, tolerance);
           cdf = cdf_response_time(e->task, pdf);
-          encod_stats_time(l, e->time, e->task, RESPONSE_TIME, instant, pdf, cdf);
-          blocks_task(e->task);
+          stats_print_int(l, e->time, e->task, RESPONSE_TIME, r, pdf, cdf);
           break;
     case TASK_DESCHEDULE:
           //Deschedule
-          instant = end_execution(e->task, e->time);
-          if (instant != 0) {
-            pdf = pdf_executions(e->task, instant, tolerance);
+          c = end_execution(e->task, e->time);
+          if (c > 0) {
+            pdf = pdf_executions(e->task, c, tolerance);
             cdf = cdf_executions(e->task, pdf);
-            encod_stats_time(l, e->time, e->task, EXECUTION_TIME, instant, pdf, cdf);
+            stats_print_int(l, e->time, e->task, EXECUTION_TIME, c, pdf, cdf);
           }
           break;
     case TASK_ARRIVAL:
           //Unblocks
-          instant = intervalls(e->task, e->time);
-          if (instant == 0) {	//first time no interval
-            encod_stats_time(l, e->time, e->task, INTERVALL_TIME, 0, 0, 0);
-          } else {
-            pdf = pdf_intervalls(e->task, instant, tolerance);
+          it = intervalls(e->task, e->time);
+          if (it > 0) {
+            pdf = pdf_intervalls(e->task, it, tolerance);
             cdf = cdf_intervalls(e->task, pdf);
-            encod_stats_time(l, e->time, e->task, INTERVALL_TIME, instant, pdf, cdf);
+            stats_print_int(l, e->time, e->task, INTERVALL_TIME, it, pdf, cdf);
           }
           break;
     case TASK_SCHEDULE:
@@ -96,7 +93,7 @@ int main(int argc, char *argv[])
         if (e == NULL) {
             done = 1;
         } else {
-            stats_event_handle(e);
+            if(e->task > 0) stats_event_handle(e);
         }
     }
 
