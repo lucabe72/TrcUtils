@@ -4,14 +4,14 @@
 #include <stdio.h>
 #include <string.h>
 
-#define JOB_ARRIVAL		0
-#define TASK_EXECUTION		1
-#define TASK_PREEMPTION		2
-#define JOB_END			3
-#define TASK_CREATION		9
-#define DEADLINE_POSTPONING	4
-#define DEADLINE_SETTING	5
-#define DEADLINE_MISS		10
+#define JJOB_ARRIVAL		0
+#define JTASK_EXECUTION		1
+#define JTASK_PREEMPTION	2
+#define JJOB_END		3
+#define JTASK_CREATION		9
+#define JDEADLINE_POSTPONING	4
+#define JDEADLINE_SETTING	5
+#define JDEADLINE_MISS		10
 
 static uint32_t swap(uint32_t val)
 {
@@ -72,7 +72,7 @@ static int header_read(FILE *f)
   return res;
 }
 
-static int common_read(FILE *f, int *len, int *type, int *time, int *task)
+static int jtrace_common(FILE *f, int *len, int *type, int *time, int *task)
 {
   *len = trace_read_int(f);
   *len = *len - 3 * 4;
@@ -92,13 +92,13 @@ int jtrace_read(FILE *f)
   char name[32];
   int name_len, name_len1, d;
 
-  res = common_read(f, &len, &type, &time, &task);
+  res = jtrace_common(f, &len, &type, &time, &task);
   if (res < 0) {
     return res;
   }
   printf("Len: %d Type: %d Time: %d Task: %d\n", len, type, time, task);
   switch (type) {
-    case TASK_CREATION:
+    case JTASK_CREATION:
       name_len = len - 4;
       name_len1 = trace_read_int(f);
       if (name_len != name_len1) {
@@ -108,7 +108,7 @@ int jtrace_read(FILE *f)
       name[name_len1] = 0;
       printf("Create %s\n", name);
       break;
-    case TASK_EXECUTION:
+    case JTASK_EXECUTION:
       if (len != 4) {
         fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
         return -3;
@@ -116,7 +116,7 @@ int jtrace_read(FILE *f)
       cpu = trace_read_int(f);
       printf("Task %d dispatched on CPU %d at time %d\n", task, cpu, time);
       break;
-    case TASK_PREEMPTION:
+    case JTASK_PREEMPTION:
       if (len != 4) {
         fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
         return -3;
@@ -124,14 +124,14 @@ int jtrace_read(FILE *f)
       cpu = trace_read_int(f);
       printf("Task %d preempted on CPU %d at time %d\n", task, cpu, time);
       break;
-    case JOB_ARRIVAL:
+    case JJOB_ARRIVAL:
       if (len != 0) {
         fprintf(stderr, "Error: len = %d != 0 - %d\n", len, type);
         return -3;
       }
       printf("Task %d wakes up at time %d\n", task, time);
       break;
-    case JOB_END:
+    case JJOB_END:
       if (len != 4) {
         fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
         return -3;
@@ -139,7 +139,7 @@ int jtrace_read(FILE *f)
       cpu = trace_read_int(f);
       printf("Task %d blocks on CPU %d at time %d\n", task, cpu, time);
       break;
-    case DEADLINE_SETTING:
+    case JDEADLINE_SETTING:
       if (len != 4) {
         fprintf(stderr, "Error: len = %d != 4 (deadline) - %d\n", len, type);
         return -3;
