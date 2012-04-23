@@ -166,12 +166,14 @@ void task_plot(struct event ev[], int i, int scale, int id, int tid,
 {
     int j;
     int start, stop, colour;
+    int end;
 
     y0 *= (ntot - 1) * YSPACE + YAX + YBORDER;
 
     colour = 75;		/* 75 % */
     start = -1;
     stop = 0;
+    end = 0;
 
     for (j = 0; j < i; j++) {
 	if (ev[j].task == id) {
@@ -193,7 +195,7 @@ void task_plot(struct event ev[], int i, int scale, int id, int tid,
 		r_plot(ev[j].time-min, tid, scale, y0);
 		break;
 	    case TASK_END:
-		colour = 25 + (50 - (colour - 25));	/* Switch between 75 and 25 */
+                end = 1;
 		break;
 	    case TASK_SCHEDULE:
 		if (start != -1) {
@@ -219,6 +221,10 @@ void task_plot(struct event ev[], int i, int scale, int id, int tid,
 		if ((stop - start) > 0) {	//box size > 0
 		    job_plot(start-min, stop-min, colour, tid, scale, y0);
 		}
+                if (end == 1) {
+		    colour = 25 + (50 - (colour - 25));	/* Switch between 75 and 25 */
+                    end = 0;
+                }
 
 		start = -1;
 		stop = 0;
