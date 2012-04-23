@@ -3,7 +3,9 @@
 #include <string.h>
 #include <malloc.h>
 #include <unistd.h>
+#include <getopt.h>
 
+#include "jtrace_read.h"
 #include "event_create.h"
 #include "trace_write.h"
 #include "pid_filter.h"
@@ -18,6 +20,10 @@ struct new_pid {
 #define dprintf(...)
 //#define dprintf printf
 
+#define FTRACE  0
+#define JTRACE  1
+
+static int trace_type;
 static unsigned int count;
 static struct new_pid *new_pids;
 static int *cpu_events;
@@ -188,6 +194,21 @@ static long long int parse(FILE *f)
 }
 
 
+static unsigned int param(int argc, char *argv[])
+{
+    int c;
+    while ((c = getopt(argc, argv, "j")) != -1)
+	switch (c) {
+            case 'j':
+                trace_type = JTRACE;
+                break;
+            default:
+	        exit(-1);
+	}
+   return 0;
+}
+
+
 int main(int argc, char *argv[])
 {
     FILE *f;
@@ -195,6 +216,7 @@ int main(int argc, char *argv[])
     int i;
     long long int time = 0, res = 0, done = 0;
 
+    param(argc, argv);
     if (argc < 2) {
         fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
 
@@ -209,7 +231,7 @@ int main(int argc, char *argv[])
 	last_pid_run[i] = -1;
     }
 
-    f = fopen(argv[1], "r");
+    f = fopen(argv[argc-1], "r");
     if (f == NULL) {
         perror("Cannot open input file");
 
@@ -220,7 +242,17 @@ int main(int argc, char *argv[])
         struct event *e;
 
         time = res + 1;
-        res = parse(f);
+        switch (trace_type) {
+            case FTRACE:
+                res = parse(f);
+                break;
+            case JTRACE:
+                res = jtrace_read(f);
+                break;
+            default:
+                fprintf(stderr, "Unknown trace type: this shouldn't have happened...\n");
+                exit(-1);
+        }
         while (e = evt_get()) {
           trc_write(e);
           free(e);
