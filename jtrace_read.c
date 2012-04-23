@@ -111,7 +111,7 @@ int jtrace_read(FILE *f)
   if (res < 0) {
     return res;
   }
-  printf("Len: %d Type: %d Time: %d Task: %d\n", len, type, time, task);
+  //printf("Len: %d Type: %d Time: %d Task: %d\n", len, type, time, task);
   switch (type) {
     case JTASK_CREATION:
       name_len = len - 4;
@@ -133,7 +133,7 @@ int jtrace_read(FILE *f)
         return -4;
       }
       cpu = trace_read_int(f);
-      printf("Task %d dispatched on CPU %d at time %d\n", task, cpu, time);
+      //printf("Task %d dispatched on CPU %d at time %d\n", task, cpu, time);
       evt_store(TASK_SCHEDULE, time, task, cpu);
       break;
     case JTASK_PREEMPTION:
@@ -143,7 +143,7 @@ int jtrace_read(FILE *f)
         return -5;
       }
       cpu = trace_read_int(f);
-      printf("Task %d preempted on CPU %d at time %d\n", task, cpu, time);
+      //printf("Task %d preempted on CPU %d at time %d\n", task, cpu, time);
       evt_store(TASK_DESCHEDULE, time, task, cpu);
       break;
     case JJOB_ARRIVAL:
@@ -152,7 +152,7 @@ int jtrace_read(FILE *f)
 
         return -6;
       }
-      printf("Task %d wakes up at time %d\n", task, time);
+      //printf("Task %d wakes up at time %d\n", task, time);
       evt_store(TASK_ARRIVAL, time, task, 0);	// FIXME: CPU number is made up
       break;
     case JJOB_END:
@@ -162,7 +162,7 @@ int jtrace_read(FILE *f)
         return -7;
       }
       cpu = trace_read_int(f);
-      printf("Task %d blocks on CPU %d at time %d\n", task, cpu, time);
+      //printf("Task %d blocks on CPU %d at time %d\n", task, cpu, time);
       evt_store(TASK_END, time, task, cpu);
       evt_store(TASK_DESCHEDULE, time, task, cpu);
       break;
@@ -173,7 +173,7 @@ int jtrace_read(FILE *f)
         return -8;
       }
       d = trace_read_int(f);
-      printf("Deadline for task %d se to %d at time %d\n", task, d, time);
+      //printf("Deadline for task %d se to %d at time %d\n", task, d, time);
       //FIXME: Handle this case!
       break;
     default:
@@ -181,5 +181,5 @@ int jtrace_read(FILE *f)
       return -9;
   }
 
-  return 0;
+  return time;
 }
