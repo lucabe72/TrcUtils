@@ -38,14 +38,8 @@ static unsigned int param(int argc, char *argv[])
 {
     int c;
 
-    while ((c = getopt(argc, argv, "C:E:S:s:e:idtj")) != -1) {
+    while ((c = getopt(argc, argv, "s:e:idtj")) != -1) {
 	switch (c) {
-	case 'C':
-	    break;
-	case 'E':
-	    break;
-	case 'S':
-	    break;
 	case 's':
 	    start_time = atoi(optarg);
 	    break;
