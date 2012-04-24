@@ -33,7 +33,7 @@ static unsigned int param(int argc, char *argv[])
         exit(-1);
   }
 
-  return 0;
+  return optind;
 }
 
 #if 0
@@ -60,9 +60,10 @@ int main(int argc, char *argv[])
     FILE *f;
     //int start = 0, fc = 0, fo = 0, opt, i;
     long long int time = 0, res = 0, done = 0;
+    int first_param;
 
-    param(argc, argv);
-    if (argc < 2) {
+    first_param = param(argc, argv);
+    if (argc - first_param < 1) {
         fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
 
         return -1;
@@ -70,7 +71,7 @@ int main(int argc, char *argv[])
 
     createPidsFilter(relevant_pids);
 
-    f = fopen(argv[argc-1], "r");
+    f = fopen(argv[first_param], "r");
     if (f == NULL) {
         perror("Cannot open input file");
 
