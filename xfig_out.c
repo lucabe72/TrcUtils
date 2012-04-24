@@ -5,8 +5,6 @@
 #include "trace_evt_handle.h"
 #include "xfig_out.h"
 
-int steps[] = { 5, 10, 25, 50, 100, 200, 250, 500, 0 };
-
 #define MINSTEP 225
 
 #define MAXT 20000
@@ -25,25 +23,35 @@ int steps[] = { 5, 10, 25, 50, 100, 200, 250, 500, 0 };
 void step_compute(int max, int *step, int *scale)
 {
     int j;
+    double s;
+    const int steps[] = { 5, 10, 25, 50, 100, 200, 250, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 0 };
 
     *step = steps[0];
     j = 1;
 
     if (MAXT > max + XBORDER) {
 	*scale = MAXT / (max + XBORDER);
+        s = *scale;
     } else {
-	*scale = 1;
+	*scale = -(max + XBORDER) / MAXT;
+        s = MAXT / (double)(max + XBORDER);
     }
-    while ((*step * *scale < MINSTEP) && steps[j] != 0) {
+    while ((*step * s < MINSTEP) && steps[j] != 0) {
 	*step = steps[j++];
     }
 }
 
-void ax_draw(unsigned long long int min, unsigned long long int max, int step, int scale, int n,
+void ax_draw(unsigned long long int min, unsigned long long int max, int step, int s, int n,
 	     int label, int ntot, int y0)
 {
     int max_scale, j;
+    double scale;
 
+    if (s > 0) {
+        scale = s;
+    } else {
+        scale = -1.0 / s;
+    }
     max_scale = (max - min + XBORDER) / step;
 
     y0 = (y0 * ((ntot - 1) * YSPACE + YAX + YBORDER));
@@ -61,21 +69,21 @@ void ax_draw(unsigned long long int min, unsigned long long int max, int step, i
     printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 1 0 2\n");
     printf("0 0 1.00 60.00 120.00\n");
     printf("\t%d %d %d %d\n", XOFF , YSPACE * n + YAX + y0,
-	   XAX + ((int) max - (int) min + XBORDER) * scale, YSPACE * n + YAX + y0);
+	   (int)(XAX + ((int) max - (int) min + XBORDER) * scale), YSPACE * n + YAX + y0);
 
 
     for (j = 1; j < max_scale; j++) {
 	printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 0 0 2\n");
-	printf("\t%d %d %d %d\n", XAX + (j * step) * scale,
+	printf("\t%d %d %d %d\n", (int)(XAX + (j * step) * scale),
 	       YSPACE * n + YAX + YBORDER / 2 + y0,
-	       XAX + (j * step) * scale, YSPACE * n + YAX + y0);
+	       (int)(XAX + (j * step) * scale), YSPACE * n + YAX + y0);
 	if (label) {
 //	    printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 0 0 2\n");
 //	    printf("\t%d %d %d %d\n", XAX + (j * step) * scale,
 //		   YSPACE * (n + 1) + YAX + YBORDER / 2 + y0,
 //		   XAX + (j * step) * scale, YSPACE * (n + 1) + YAX + y0);
 	    printf("4 0 0 50 0 0 12 4.7124 4 135 345 ");
-	    printf("%d %d ", XAX + (j * step) * scale - 60,
+	    printf("%d %d ", (int)(XAX + (j * step) * scale) - 60,
 		   YSPACE * n + YAX + YBORDER + y0);
 	    printf("%d\\001\n", j * step);
 	} else {
@@ -117,59 +125,65 @@ void yax_draw(int npids, int npidstot, int y0)
 	   XAX, YAX - YSIZE + y0);
 }
 
-static void job_plot(int start, int stop, int col, int n, int scale,
+static void job_plot(int start, int stop, int col, int n, double scale,
 		     int y0)
 {
     /* 15 is 75% filled (area fill goes from 0 to 20) */
     /* Depth 100: in bkg respect to all other objs... */
     printf("2 2 0 1 0 7 100 0 %d 0.000 0 0 -1 0 0 5\n", col * 20 / 100);
-    printf("\t%d %d ", XAX + (int) start * scale, YSPACE * n + YAX + y0);
-    printf("%d %d ", XAX + (int) start * scale,
+    printf("\t%d %d ", XAX + (int)(start * scale), YSPACE * n + YAX + y0);
+    printf("%d %d ", XAX + (int)(start * scale),
 	   YSPACE * n + YAX - YBOX + y0);
-    printf("%d %d ", XAX + (int) stop * scale,
+    printf("%d %d ", XAX + (int)(stop * scale),
 	   YSPACE * n + YAX - YBOX + y0);
-    printf("%d %d ", XAX + (int) stop * scale, YSPACE * n + YAX + y0);
-    printf("%d %d\n", XAX + (int) start * scale, YSPACE * n + YAX + y0);
+    printf("%d %d ", XAX + (int)(stop * scale), YSPACE * n + YAX + y0);
+    printf("%d %d\n", XAX + (int)(start * scale), YSPACE * n + YAX + y0);
 }
 
-static void r_plot(int t, int n, int scale, int y0)
+static void r_plot(int t, int n, double scale, int y0)
 {
     printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 0 1 2\n");
     printf("1 1 1.00 60.00 120.00\n");
-    printf("\t%d %d ", XAX + (int) t * scale, YSPACE * n + YAX + y0);
-    printf("%d %d\n", XAX + (int) t * scale,
+    printf("\t%d %d ", XAX + (int)(t * scale), YSPACE * n + YAX + y0);
+    printf("%d %d\n", XAX + (int)(t * scale),
 	   (YSPACE * n + YAX + 2 * YBOX) + y0);
 }
 
-static void d_plot(int t, int n, int scale, int y0)
+static void d_plot(int t, int n, double scale, int y0)
 {
     printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 0 1 2\n");
     printf("1 1 1.00 60.00 120.00\n");	/* Arrow type: closed triangle */
-    printf("\t%d %d ", XAX + (int) t * scale, (YSPACE * n + YAX) + y0);
-    printf("%d %d\n", XAX + (int) t * scale,
+    printf("\t%d %d ", XAX + (int)(t * scale), (YSPACE * n + YAX) + y0);
+    printf("%d %d\n", XAX + (int)(t * scale),
 	   (YSPACE * n + YAX - 2 * YBOX) + y0);
 }
 
-static void arc_plot(int t1, int t2, int n, int scale, int y0)
+static void arc_plot(int t1, int t2, int n, double scale, int y0)
 {
     printf("3 0 2 1 0 7 50 0 -1 0.000 0 0 1 3\n");
     printf("1 1 1.00 60.00 120.00\n");
-    printf("\t%d %d ", XAX + (int) t1 * scale,
+    printf("\t%d %d ", XAX + (int)(t1 * scale),
 	   (YSPACE * n + YAX - (int) (2.2 * YBOX)) + y0);
-    printf("%d %d ", XAX + (int) (t1 + t2) / 2 * scale,
+    printf("%d %d ", XAX + (int)((t1 + t2) / 2 * scale),
 	   (YSPACE * n + YAX - (int) (2.5 * YBOX)) + y0);
-    printf("%d %d\n", XAX + (int) t2 * scale,
+    printf("%d %d\n", XAX + (int)(t2 * scale),
 	   (YSPACE * n + YAX - (int) (2.2 * YBOX)) + y0);
     printf("1 1 1\n");
 }
 
-void task_plot(struct event ev[], int i, int scale, int id, int tid,
+void task_plot(struct event ev[], int i, int s, int id, int tid,
 	       int ntot, int y0, int cpu, int min)
 {
     int j;
     int start, stop, colour;
     int end;
+    double scale;
 
+    if (s > 0) {
+        scale = s;
+    } else {
+        scale = -1.0 / s;
+    }
     y0 *= (ntot - 1) * YSPACE + YAX + YBORDER;
 
     colour = 75;		/* 75 % */
