@@ -7,31 +7,31 @@
 
 static uint32_t swap(uint32_t val)
 {
-    return ntohl(val);
+  return ntohl(val);
 }
 
 static uint32_t trace_read_int(FILE * f)
 {
-    uint32_t sw;
+  uint32_t sw;
 
-    fread(&sw, 4, 1, f);
-    return swap(sw);
+  fread(&sw, 4, 1, f);
+  return swap(sw);
 }
 
-int trace_common(FILE *f, int *type, int *time, int *task, int *cpu)
+int trace_common(FILE * f, int *type, int *time, int *task, int *cpu)
 {
-    *type = trace_read_int(f);
-    *time = trace_read_int(f);
-    *task = trace_read_int(f);
-    *cpu = trace_read_int(f);
-    if (feof(f)) {
-        return -1;
-    }
+  *type = trace_read_int(f);
+  *time = trace_read_int(f);
+  *task = trace_read_int(f);
+  *cpu = trace_read_int(f);
+  if (feof(f)) {
+    return -1;
+  }
 
-    return 0;
+  return 0;
 }
 
-char *task_name(FILE *f)
+char *task_name(FILE * f)
 {
   int size;
   char *name;
@@ -47,7 +47,7 @@ char *task_name(FILE *f)
   return name;
 }
 
-int task_dline(FILE *f)
+int task_dline(FILE * f)
 {
   return trace_read_int(f);
 }

@@ -19,18 +19,18 @@
 
 static uint32_t swap(uint32_t val)
 {
-    return ntohl(val);
+  return ntohl(val);
 }
 
 static uint32_t trace_read_int(FILE * f)
 {
-    uint32_t sw;
+  uint32_t sw;
 
-    fread(&sw, 4, 1, f);
-    return swap(sw);
+  fread(&sw, 4, 1, f);
+  return swap(sw);
 }
 
-static char *string_read(FILE *f)
+static char *string_read(FILE * f)
 {
   char *res;
   int size = 16, v = 1, i = 0;
@@ -44,7 +44,7 @@ static char *string_read(FILE *f)
 
       return NULL;
     }
-    res[i++] = (char)v;
+    res[i++] = (char) v;
     if (i == size) {
       size += 16;
       res = realloc(res, size);
@@ -54,7 +54,8 @@ static char *string_read(FILE *f)
   return res;
 }
 
-static int jtrace_common(FILE *f, int *len, int *type, int *time, int *task)
+static int jtrace_common(FILE * f, int *len, int *type, int *time,
+			 int *task)
 {
   *len = trace_read_int(f);
   *len = *len - 3 * 4;
@@ -68,11 +69,11 @@ static int jtrace_common(FILE *f, int *len, int *type, int *time, int *task)
   return 0;
 }
 
-static int jtrace_header_read(FILE *f)
+static int jtrace_header_read(FILE * f)
 {
   char *header;
   int res = -1;
-  
+
   header = string_read(f);
   if (header) {
     if (memcmp(header, "version ", 8)) {
@@ -90,12 +91,12 @@ static int jtrace_header_read(FILE *f)
   return res;
 }
 
-int jtrace_read(FILE *f)
+int jtrace_read(FILE * f)
 {
   int len, type, time, task, cpu, res;
   char name[32];
   int name_len, name_len1, d;
-  
+
   res = ftell(f);
   if (res < 0) {
     return -1;
@@ -117,9 +118,9 @@ int jtrace_read(FILE *f)
       name_len = len - 4;
       name_len1 = trace_read_int(f);
       if (name_len != name_len1) {
-        fprintf(stderr, "Error: name len %d != %d\n", name_len, name_len1);
+	fprintf(stderr, "Error: name len %d != %d\n", name_len, name_len1);
 
-        return -3;
+	return -3;
       }
       fread(name, name_len1, 1, f);
       name[name_len1] = 0;
@@ -128,9 +129,9 @@ int jtrace_read(FILE *f)
       break;
     case JTASK_EXECUTION:
       if (len != 4) {
-        fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
+	fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
 
-        return -4;
+	return -4;
       }
       cpu = trace_read_int(f);
       //printf("Task %d dispatched on CPU %d at time %d\n", task, cpu, time);
@@ -138,9 +139,9 @@ int jtrace_read(FILE *f)
       break;
     case JTASK_PREEMPTION:
       if (len != 4) {
-        fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
+	fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
 
-        return -5;
+	return -5;
       }
       cpu = trace_read_int(f);
       //printf("Task %d preempted on CPU %d at time %d\n", task, cpu, time);
@@ -148,18 +149,18 @@ int jtrace_read(FILE *f)
       break;
     case JJOB_ARRIVAL:
       if (len != 0) {
-        fprintf(stderr, "Error: len = %d != 0 - %d\n", len, type);
+	fprintf(stderr, "Error: len = %d != 0 - %d\n", len, type);
 
-        return -6;
+	return -6;
       }
       //printf("Task %d wakes up at time %d\n", task, time);
       evt_store(TASK_ARRIVAL, time, task, 0);	// FIXME: CPU number is made up
       break;
     case JJOB_END:
       if (len != 4) {
-        fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
+	fprintf(stderr, "Error: len = %d != 4 (CPU) - %d\n", len, type);
 
-        return -7;
+	return -7;
       }
       cpu = trace_read_int(f);
       //printf("Task %d blocks on CPU %d at time %d\n", task, cpu, time);
@@ -168,9 +169,10 @@ int jtrace_read(FILE *f)
       break;
     case JDEADLINE_SETTING:
       if (len != 4) {
-        fprintf(stderr, "Error: len = %d != 4 (deadline) - %d\n", len, type);
+	fprintf(stderr, "Error: len = %d != 4 (deadline) - %d\n", len,
+		type);
 
-        return -8;
+	return -8;
       }
       d = trace_read_int(f);
       //printf("Deadline for task %d se to %d at time %d\n", task, d, time);

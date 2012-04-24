@@ -6,8 +6,8 @@
 #include "stats_utils.h"
 
 struct record_entry {
-    int times;
-    unsigned long int time;
+  int times;
+  unsigned long int time;
 };
 
 struct record {
@@ -28,16 +28,17 @@ static const char *stat_name[] = {
 
 static struct record *updateRecord(unsigned long int time,
 				   unsigned long int tollerance,
-                                   struct record *r)
+				   struct record *r)
 {
   int i;
 
   if (time == 0) {
     return r;
   }
-  
+
   for (i = 0; i < r->size; i++) {
-    if ((time <= r->entries[i].time + tollerance) && (time + tollerance >= r->entries[i].time)) {
+    if ((time <= r->entries[i].time + tollerance)
+	&& (time + tollerance >= r->entries[i].time)) {
       r->entries[i].times++;
 
       return r;
@@ -57,7 +58,8 @@ static struct record *updateRecord(unsigned long int time,
 }
 
 static unsigned long int pdf_generic(int pid, unsigned long int time,
-				    unsigned long int tollerance, int type)
+				     unsigned long int tollerance,
+				     int type)
 {
   int i, times = 0;
   struct record *r = record_find(pid);
@@ -88,7 +90,7 @@ unsigned long int pdf_response_time(int pid, unsigned long int time,
 }
 
 unsigned long int pdf_executions(int pid, unsigned long int time,
-				    unsigned long int tollerance)
+				 unsigned long int tollerance)
 {
   return pdf_generic(pid, time, tollerance, RECORD_EXECUTION);
 }
@@ -132,27 +134,24 @@ float cdf_intervalls(int pid, unsigned long int time)
 }
 
 void stats_print_int(void *l, unsigned long int time, int task,
-                     int type, unsigned long int val,
-                     unsigned long int pdf, float cdf)
-{
-    if (l == NULL) {
-        return;
-    }
-
-    //fprintf(l, "%ld %d %s %d %ld %ld %d\n", time, task, getTaskName(task), kind_stat, time_i, pdf, cdf);
-    fprintf(l, "%ld %d %s %lu %ld %f\n", time, task, stat_name[type], val,
-	    pdf, cdf);
-}
-
-void stats_print_float(void *l, unsigned long int time, int task,
-                       int type, float cpu, float cpuw, float cpua)
+		     int type, unsigned long int val,
+		     unsigned long int pdf, float cdf)
 {
   if (l == NULL) {
     return;
   }
-
-    //fprintf(l, "%ld %d %s %d %f %f %f\n", time, task, getTaskName(task), cpu_stat, cpu, cpuw, cpua);
-  fprintf(l, "%ld %d %s %f %f %f\n", time, task, stat_name[type], cpu, cpuw, cpua);
+  //fprintf(l, "%ld %d %s %d %ld %ld %d\n", time, task, getTaskName(task), kind_stat, time_i, pdf, cdf);
+  fprintf(l, "%ld %d %s %lu %ld %f\n", time, task, stat_name[type], val,
+	  pdf, cdf);
 }
 
-
+void stats_print_float(void *l, unsigned long int time, int task,
+		       int type, float cpu, float cpuw, float cpua)
+{
+  if (l == NULL) {
+    return;
+  }
+  //fprintf(l, "%ld %d %s %d %f %f %f\n", time, task, getTaskName(task), cpu_stat, cpu, cpuw, cpua);
+  fprintf(l, "%ld %d %s %f %f %f\n", time, task, stat_name[type], cpu,
+	  cpuw, cpua);
+}

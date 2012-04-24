@@ -4,20 +4,20 @@
 
 #include "stats_utils.h"
 
-struct record {		//FIXME!!!
+struct record {			//FIXME!!!
   int size;
   struct record_entry *entries;
 };
 
 struct trace {
-    int name, blocks, cpus_util_size;
-    long int start_execution;
-    unsigned long int unblocks_time;
-    struct record records[3];
-    unsigned long int execution_total;
-    unsigned long int execution_time;
-    float *cpus_util;
-    int p[3];
+  int name, blocks, cpus_util_size;
+  long int start_execution;
+  unsigned long int unblocks_time;
+  struct record records[3];
+  unsigned long int execution_total;
+  unsigned long int execution_time;
+  float *cpus_util;
+  int p[3];
 };
 
 static struct trace *tasks;
@@ -25,14 +25,14 @@ static int size_tasks;
 
 static int containsTask(int pid)
 {
-    int i;
+  int i;
 
-    for (i = 0; i < size_tasks; i++) {
-	if (tasks[i].name == pid) {
-	    return i;
-	}
+  for (i = 0; i < size_tasks; i++) {
+    if (tasks[i].name == pid) {
+      return i;
     }
-    return -1;
+  }
+  return -1;
 }
 
 struct record *record_find(int pid)
@@ -74,7 +74,9 @@ void start_execution(int pid, unsigned long int time)
 
   if (i >= 0) {
     if (tasks[i].start_execution >= 0) {
-      fprintf(stderr, "Scheduling task %d with last scheduling time = %ld!!!\n", pid, tasks[i].start_execution);
+      fprintf(stderr,
+	      "Scheduling task %d with last scheduling time = %ld!!!\n",
+	      pid, tasks[i].start_execution);
       exit(-1);
     }
     tasks[i].start_execution = time;
@@ -102,7 +104,7 @@ unsigned long int end_execution(int pid, unsigned long int time)
     return 0;
   }
 
-abort();
+  abort();
   return -1;
 }
 
@@ -119,79 +121,79 @@ unsigned long int intervalls(int pid, unsigned long int time)
     return result;
   }
 
-abort();
+  abort();
   return -1;
 }
 
 unsigned long int response_time(int pid, unsigned long int time)
 {
   int i = containsTask(pid);
-  
+
   if (i >= 0) {
     tasks[i].blocks = 1;
     return time - tasks[i].unblocks_time;
   }
 
-abort();
+  abort();
   return -1;
 }
 
 void create_task(int pid, unsigned long int time)
 {
-    if (containsTask(pid) == -1) {
+  if (containsTask(pid) == -1) {
 
-	tasks =
-	    (struct trace *) realloc(tasks,
-				     ++size_tasks * sizeof(struct trace));
-	tasks[size_tasks - 1].name = pid;
+    tasks =
+	(struct trace *) realloc(tasks,
+				 ++size_tasks * sizeof(struct trace));
+    tasks[size_tasks - 1].name = pid;
 
-	tasks[size_tasks - 1].p[0] = 0;
-	tasks[size_tasks - 1].p[1] = 0;
-	tasks[size_tasks - 1].p[2] = 0;
+    tasks[size_tasks - 1].p[0] = 0;
+    tasks[size_tasks - 1].p[1] = 0;
+    tasks[size_tasks - 1].p[2] = 0;
 
-	tasks[size_tasks - 1].unblocks_time = time;
-	tasks[size_tasks - 1].records[0].size = 0;
-	tasks[size_tasks - 1].records[0].entries = NULL;
-	tasks[size_tasks - 1].records[1].size = 0;
-	tasks[size_tasks - 1].records[1].entries = NULL;
-	tasks[size_tasks - 1].records[2].size = 0;
-	tasks[size_tasks - 1].records[2].entries = NULL;
+    tasks[size_tasks - 1].unblocks_time = time;
+    tasks[size_tasks - 1].records[0].size = 0;
+    tasks[size_tasks - 1].records[0].entries = NULL;
+    tasks[size_tasks - 1].records[1].size = 0;
+    tasks[size_tasks - 1].records[1].entries = NULL;
+    tasks[size_tasks - 1].records[2].size = 0;
+    tasks[size_tasks - 1].records[2].entries = NULL;
 
-	tasks[size_tasks - 1].start_execution = -1;
+    tasks[size_tasks - 1].start_execution = -1;
 
-	tasks[size_tasks - 1].execution_total = 0;
-	tasks[size_tasks - 1].execution_time = 0;
-	tasks[size_tasks - 1].cpus_util = NULL;
-	tasks[size_tasks - 1].cpus_util_size = 0;
+    tasks[size_tasks - 1].execution_total = 0;
+    tasks[size_tasks - 1].execution_time = 0;
+    tasks[size_tasks - 1].cpus_util = NULL;
+    tasks[size_tasks - 1].cpus_util_size = 0;
 
-	tasks[size_tasks - 1].blocks = 0;
-    }
+    tasks[size_tasks - 1].blocks = 0;
+  }
 }
 
 void calculateCPUsUtil(void *l, unsigned long int time)
 {
-    int i;
+  int i;
 
-    for (i = 0; i < size_tasks; i++) {
-	float t = tasks[i].execution_total, a = 0, w = 100;
-        int j;
+  for (i = 0; i < size_tasks; i++) {
+    float t = tasks[i].execution_total, a = 0, w = 100;
+    int j;
 
-	tasks[i].execution_total = 0;
-	t = (t / time) * 100.0;
-printf("Util %d (%d) = %f\n", i, tasks[i].name, t);
-	tasks[i].cpus_util =
-	    (float *) realloc(tasks[i].cpus_util,
-			      ++tasks[i].cpus_util_size * sizeof(float));
-	(tasks[i].cpus_util)[tasks[i].cpus_util_size - 1] = t;
+    tasks[i].execution_total = 0;
+    t = (t / time) * 100.0;
+    printf("Util %d (%d) = %f\n", i, tasks[i].name, t);
+    tasks[i].cpus_util =
+	(float *) realloc(tasks[i].cpus_util,
+			  ++tasks[i].cpus_util_size * sizeof(float));
+    (tasks[i].cpus_util)[tasks[i].cpus_util_size - 1] = t;
 
-	for (j = 0; j < tasks[i].cpus_util_size; j++) {
-	    a += (tasks[i].cpus_util)[j];
-	    if ((tasks[i].cpus_util)[j] < w) {
-		w = (tasks[i].cpus_util)[j];
-	    }
-	}
-	a /= tasks[i].cpus_util_size;
-	//encod_stats_cpu(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
-	stats_print_float(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
+    for (j = 0; j < tasks[i].cpus_util_size; j++) {
+      a += (tasks[i].cpus_util)[j];
+      if ((tasks[i].cpus_util)[j] < w) {
+	w = (tasks[i].cpus_util)[j];
+      }
     }
+    a /= tasks[i].cpus_util_size;
+    //encod_stats_cpu(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
+    stats_print_float(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
+  }
 }

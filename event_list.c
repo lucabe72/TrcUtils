@@ -1,9 +1,9 @@
 #include <stdlib.h>
- 
+
 #include "event.h"
 #include "event_list.h"
 
-#define MAX_CPUS 8	//FIXME!
+#define MAX_CPUS 8		//FIXME!
 
 struct node {
   struct event e;
@@ -13,7 +13,8 @@ struct node {
 static struct node *last;
 static struct node *first;
 
-void evt_store_dl(int type, int time, int pid, int cpu, int old_dl, int new_dl)
+void evt_store_dl(int type, int time, int pid, int cpu, int old_dl,
+		  int new_dl)
 {
   struct node *p;
 
@@ -64,12 +65,12 @@ struct event_trace *trace_export(unsigned int *cpus)
 {
   struct event_trace *t;
   struct node *p = first;
-  unsigned int n[MAX_CPUS] = {0};
+  unsigned int n[MAX_CPUS] = { 0 };
   unsigned int i;
 
   *cpus = 0;
-  while(p) {
-    if ((unsigned int)p->e.cpu > *cpus) {
+  while (p) {
+    if ((unsigned int) p->e.cpu > *cpus) {
       *cpus = p->e.cpu;
     }
     n[p->e.cpu]++;
@@ -94,7 +95,8 @@ struct event_trace *trace_export(unsigned int *cpus)
     p = p->next;
     free(e);
   }
-  first = NULL; last = NULL;
+  first = NULL;
+  last = NULL;
 
   return t;
 }
