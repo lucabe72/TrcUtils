@@ -1,1 +1,1 @@
-long long int ftrace_parse(FILE *f);
+long long int ftrace_parse(FILE * f);

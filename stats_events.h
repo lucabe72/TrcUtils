@@ -10,4 +10,3 @@ void task_unset_p(int pid, int type);
 struct record *record_find(int pid);
 
 void calculateCPUsUtil(void *f, unsigned long int time);
-

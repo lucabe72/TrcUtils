@@ -10,4 +10,3 @@ void trc_force_desch(int pid, int cpu, unsigned long long int time);
 void trc_force_deactivation(int pid, int cpu, unsigned long long int time);
 
 void trc_write(struct event *e);
-

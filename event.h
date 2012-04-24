@@ -13,15 +13,13 @@
 
 
 struct event {
-    /* Common part... */
-    int type;
-    int task;
-    int time;
-    int cpu;
+  /* Common part... */
+  int type;
+  int task;
+  int time;
+  int cpu;
 
-    /* Extra part */
-    int new_dl;
-    int old_dl;
+  /* Extra part */
+  int new_dl;
+  int old_dl;
 };
-
-

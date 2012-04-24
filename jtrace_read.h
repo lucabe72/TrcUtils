@@ -1,2 +1,1 @@
-int jtrace_read(FILE *f);
-
+int jtrace_read(FILE * f);
