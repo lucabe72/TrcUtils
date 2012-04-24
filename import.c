@@ -15,20 +15,25 @@
 #define JTRACE  1
 
 static int trace_type;
-
+static const char *relevant_pids;
 
 static unsigned int param(int argc, char *argv[])
 {
-    int c;
-    while ((c = getopt(argc, argv, "j")) != -1)
-	switch (c) {
-            case 'j':
-                trace_type = JTRACE;
-                break;
-            default:
-	        exit(-1);
-	}
-   return 0;
+  int c;
+
+  while ((c = getopt(argc, argv, "jp:")) != -1)
+    switch (c) {
+      case 'j':
+        trace_type = JTRACE;
+        break;
+      case 'p':
+        relevant_pids = optarg; 
+        break;
+      default:
+        exit(-1);
+  }
+
+  return 0;
 }
 
 #if 0
@@ -63,7 +68,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    createPidsFilter("");		// FIXME!
+    createPidsFilter(relevant_pids);
 
     f = fopen(argv[argc-1], "r");
     if (f == NULL) {

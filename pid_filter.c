@@ -31,9 +31,10 @@ void destroyPidsFilter(void)
 int createPidsFilter(const char *pids)
 {
     unsigned int i, j;
+    char *temp;
 
-    char *temp = (char *) malloc(sizeof(char) * (strlen(pids)) + 1);
-
+    if (!pids) return 0;
+    temp = malloc(strlen(pids) + 1);
     for (i = 0, j = 0; i < strlen(pids); i++) {
 	if (pids[i] == ':') {
 	    if (createFilterSupport(temp, j) == 1) {
