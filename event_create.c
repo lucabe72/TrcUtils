@@ -33,21 +33,27 @@ void evt_activation(int pid, int cpu, unsigned long long int time)
 {
     int utime = time - start_time;
 
-    evt_store(TASK_ARRIVAL, utime, pid, cpu);
+    if (pid) {
+        evt_store(TASK_ARRIVAL, utime, pid, cpu);
+    }
 }
 
 void evt_deactivation(int pid, int cpu, unsigned long long int time)
 {
     int utime = time - start_time;
 
-    evt_store(TASK_END, utime, pid, cpu);
+    if (pid) {
+        evt_store(TASK_END, utime, pid, cpu);
+    }
 }
 
 void evt_force_deactivation(int pid, int cpu, unsigned long long int time)
 {
     int utime = time - start_time;
 
-    evt_store(TASK_FORCE_END, utime, pid, cpu);
+    if (pid) {
+        evt_store(TASK_FORCE_END, utime, pid, cpu);
+    }
 }
 
 void evt_creation(int pid, const char *name, int cpu,
