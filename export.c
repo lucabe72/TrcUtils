@@ -8,6 +8,7 @@
 #include "text_out.h"
 #include "xfig_out.h"
 #include "trace_write.h"
+#include "jtrace_write.h"
 
 #define MAX_EVENTS 10000
 
@@ -15,6 +16,7 @@
 #define OUTPUT_DUMP 1
 #define OUTPUT_INFO 2
 #define OUTPUT_TRACE 3
+#define OUTPUT_RTSIM 4
 
 static int output_type;
 
@@ -34,7 +36,7 @@ static void help(void)
 static unsigned int param(int argc, char *argv[], int *start_time, int *end_time)
 {
     int c;
-    while ((c = getopt(argc, argv, "C:E:S:s:e:idt")) != -1)
+    while ((c = getopt(argc, argv, "C:E:S:s:e:idtj")) != -1)
 	switch (c) {
 	case 'C':
 	    break;
@@ -56,6 +58,9 @@ static unsigned int param(int argc, char *argv[], int *start_time, int *end_time
             break;
         case 't':
             output_type = OUTPUT_TRACE;
+            break;
+        case 'j':
+            output_type = OUTPUT_RTSIM;
             break;
 	default:
 	    help();
@@ -121,6 +126,19 @@ int main(int argc, char *argv[])
                     done = 1;
                 } else {
                     trc_write(e);
+                }
+            }
+            break;
+        case OUTPUT_RTSIM:
+            done = 0;
+            while(!done) {
+                struct event *e;
+
+                e = evt_get();
+                if (e == NULL) {
+                    done = 1;
+                } else {
+                    jtrace_write(e);
                 }
             }
             break;
