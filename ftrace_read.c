@@ -120,10 +120,10 @@ static void trace(unsigned long long int time, int current_pid,
       cpu_events[cpu] = 1;
     }
     last_pid_run[cpu] = current_pid;	//Last pid scheduled
-    evt_dispatch(prev_pid, current_pid, cpu, time);
     if (prev_state != 'R') {
       evt_deactivation(prev_pid, cpu, time);
     }
+    evt_dispatch(prev_pid, current_pid, cpu, time);
   }
 }
 
