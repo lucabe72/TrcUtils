@@ -10,11 +10,6 @@ struct record_entry {
   unsigned long int time;
 };
 
-struct record {
-  int size;
-  struct record_entry *entries;
-};
-
 #define RECORD_UNBLOCK   0
 #define RECORD_RESPONSE  1
 #define RECORD_EXECUTION 2
@@ -116,6 +111,30 @@ static float cdf_generic(int pid, unsigned long int time, int type)
   }
 
   return (float) commulative / m;
+}
+
+static int entries_cmp(const void *a, const void *b)
+{
+  const struct record_entry *pa = a;
+  const struct record_entry *pb = b;
+
+  return pa->time > pb->time;
+}
+
+void pmf_write(FILE *f, struct record *r)
+{
+  int i, sum;
+
+  qsort(r->entries, r->size, sizeof(struct record_entry), entries_cmp); 
+  sum = 0;
+  for (i = 0; i < r->size; i++) {
+    sum += r->entries[i].times;
+  }
+
+  fprintf(f, "0 0\n");
+  for (i = 0; i < r->size; i++) {
+    fprintf(f, "%lu %lf\n", r->entries[i].time, (double)r->entries[i].times / sum);
+  }
 }
 
 float cdf_response_time(int pid, unsigned long int time)

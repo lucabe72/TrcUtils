@@ -4,11 +4,6 @@
 
 #include "stats_utils.h"
 
-struct record {			//FIXME!!!
-  int size;
-  struct record_entry *entries;
-};
-
 struct trace {
   int name, blocks, cpus_util_size;
   long int start_execution;
@@ -195,5 +190,28 @@ void calculateCPUsUtil(void *l, unsigned long int time)
     a /= tasks[i].cpus_util_size;
     //encod_stats_cpu(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
     stats_print_float(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
+  }
+}
+
+void stats_pmf_out(void)
+{
+  int i;
+
+  for (i = 0; i < size_tasks; i++) {
+    char fname[32];
+    FILE *f;
+
+    sprintf(fname, "%d-exec.txt", tasks[i].name);
+    f = fopen(fname, "w");
+    pmf_write(f, &tasks[i].records[2]);
+    fclose(f);
+    sprintf(fname, "%d-interarrival.txt", tasks[i].name);
+    f = fopen(fname, "w");
+    pmf_write(f, &tasks[i].records[0]);
+    fclose(f);
+    sprintf(fname, "%d-response.txt", tasks[i].name);
+    f = fopen(fname, "w");
+    pmf_write(f, &tasks[i].records[1]);
+    fclose(f);
   }
 }

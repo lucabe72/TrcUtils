@@ -12,7 +12,33 @@
 
 static unsigned int tolerance;
 static int start_time, end_time;
+static int do_pmf;
 static FILE *l;
+
+static unsigned int opts_parse(int argc, char *argv[])
+{
+  int c;
+
+  while ((c = getopt(argc, argv, "ps:e:f:")) != -1)
+    switch (c) {
+      case 'f':
+	l = fopen(optarg, "r");
+	break;
+      case 'p':
+	do_pmf = 1;
+	break;
+      case 's':
+	start_time = atoi(optarg);
+	break;
+      case 'e':
+	end_time = atoi(optarg);
+	break;
+      default:
+	exit(-1);
+    }
+
+  return optind;
+}
 
 static void stats_event_handle(const struct event *e)
 {
@@ -69,9 +95,13 @@ int main(int argc, char *argv[])
   FILE *f;
   int res, done;
   char *fname;
+  int first_parameter;
 
-  l = stdout;
-  fname = argv[argc - 1];
+  first_parameter = opts_parse(argc, argv);
+  if (!l) {
+    l = stdout;
+  }
+  fname = argv[first_parameter];
   f = fopen(fname, "r");
   if (f == NULL) {
     perror(fname);
@@ -96,6 +126,10 @@ int main(int argc, char *argv[])
       if (e->task > 0)
 	stats_event_handle(e);
     }
+  }
+
+  if (do_pmf) {
+    stats_pmf_out();
   }
 
   return 0;
