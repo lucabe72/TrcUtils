@@ -19,6 +19,7 @@
 #define OUTPUT_RTSIM 4
 
 static int output_type;
+static int start_time, end_time;
 
 static void help(void)
 {
@@ -33,10 +34,11 @@ static void help(void)
     fprintf(stdout, "-e t\tEnd Time\n");
 }
 
-static unsigned int param(int argc, char *argv[], int *start_time, int *end_time)
+static unsigned int param(int argc, char *argv[])
 {
     int c;
-    while ((c = getopt(argc, argv, "C:E:S:s:e:idtj")) != -1)
+
+    while ((c = getopt(argc, argv, "C:E:S:s:e:idtj")) != -1) {
 	switch (c) {
 	case 'C':
 	    break;
@@ -45,10 +47,10 @@ static unsigned int param(int argc, char *argv[], int *start_time, int *end_time
 	case 'S':
 	    break;
 	case 's':
-	    *start_time = atoi(optarg);
+	    start_time = atoi(optarg);
 	    break;
 	case 'e':
-	    *end_time = atoi(optarg);
+	    end_time = atoi(optarg);
 	    break;
         case 'i':
             output_type = OUTPUT_INFO;
@@ -66,21 +68,27 @@ static unsigned int param(int argc, char *argv[], int *start_time, int *end_time
 	    help();
 	    exit(2);
 	}
-   return 0;
+   }
+
+   return optind;
 }
 
 int main(int argc, char *argv[])
 {
     FILE *f;
     unsigned int j, z, cpus;
-    int done, i, last_server, last_server_tot = 0;
-    int step, scale, start_time = 0, end_time = 0;
+    int done, i, last_server, last_server_tot = 0, first_arg;
+    int step, scale;
     char *fname;
     struct event_trace *t;
 
-    param(argc, argv,&start_time,&end_time);
+    first_arg = param(argc, argv);
 
-    fname = argv[argc-1];
+    if (first_arg >= argc) {
+        fprintf(stderr, "Usage: %s [options] <input file>\n", argv[0]);
+    }
+
+    fname = argv[first_arg];
     f = fopen(fname, "r");
     if (f == NULL) {
 	perror(fname);
