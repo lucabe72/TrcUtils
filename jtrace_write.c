@@ -76,13 +76,18 @@ void jtrace_start(unsigned long long int time)
   const char *header = "version 1.2"; 
 
   start_time = time;
-  write(1, header, strlen(header));
+  write(1, header, strlen(header) + 1);
 }
 
 void jtrace_write(struct event *e)
 {
   int end_job[MAX_CPUS];
+  static int inited;
 
+  if (!inited) {
+    inited = 1;
+    jtrace_start(e->time);
+  }
   switch (e->type) {
     case TASK_NAME:
       {
