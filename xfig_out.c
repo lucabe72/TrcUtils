@@ -48,12 +48,14 @@ void ax_draw(unsigned long long int min, unsigned long long int max, int step, i
 
     y0 = (y0 * ((ntot - 1) * YSPACE + YAX + YBORDER));
 
+#if 0
     /* Draw the X ax with scale */
     printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 1 0 2\n");
     printf("0 0 1.00 60.00 120.00\n");
     printf("\t%d %d %d %d\n", XOFF , YSPACE * (n + 1) + YAX + y0,
 	   XAX + ((int) max - (int) min + XBORDER) * scale,
 	   YSPACE * (n + 1) + YAX + y0);
+#endif
 
     /* Draw the X ax... */
     printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 1 0 2\n");
@@ -68,13 +70,13 @@ void ax_draw(unsigned long long int min, unsigned long long int max, int step, i
 	       YSPACE * n + YAX + YBORDER / 2 + y0,
 	       XAX + (j * step) * scale, YSPACE * n + YAX + y0);
 	if (label) {
-	    printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 0 0 2\n");
-	    printf("\t%d %d %d %d\n", XAX + (j * step) * scale,
-		   YSPACE * (n + 1) + YAX + YBORDER / 2 + y0,
-		   XAX + (j * step) * scale, YSPACE * (n + 1) + YAX + y0);
+//	    printf("2 1 0 1 0 7 50 0 -1 0.000 0 0 -1 0 0 2\n");
+//	    printf("\t%d %d %d %d\n", XAX + (j * step) * scale,
+//		   YSPACE * (n + 1) + YAX + YBORDER / 2 + y0,
+//		   XAX + (j * step) * scale, YSPACE * (n + 1) + YAX + y0);
 	    printf("4 0 0 50 0 0 12 4.7124 4 135 345 ");
 	    printf("%d %d ", XAX + (j * step) * scale - 60,
-		   YSPACE * (n + 1) + YAX + YBORDER + y0);
+		   YSPACE * n + YAX + YBORDER + y0);
 	    printf("%d\\001\n", j * step);
 	} else {
 	}

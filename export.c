@@ -161,16 +161,16 @@ int main(int argc, char *argv[])
             for (j = 0, z = 0; j < cpus; j++) {
                 last_server = servers(j);
                 if (last_server > 1) {	//last_server == 0 is idle
-                    fprintf(stderr, "CPU %d\n", z);
+                    fprintf(stderr, "CPU %d - %d\n", z, last_server);
                     yax_draw(last_server, last_server_tot, z);
                     cpu_name(z, last_server_tot);
 
                     for (i = 0; i < last_server; i++) {
-                        fprintf(stderr, "\t%s\n", srv_name(srv_id(i, j), j));
+                        fprintf(stderr, "%d/%d \t%s\n", i, last_server - 1, srv_name(srv_id(i, j), j));
                         ax_draw(start_time, last_time(), step, scale, i, (i == (last_server - 1)), last_server_tot, z);
                         task_plot(t[j].ev, t[j].last_event, scale, srv_id(i, j), i, last_server_tot, z, j, start_time);
 	            }
-	            last_server_tot += last_server + 1;
+	            last_server_tot += last_server;
 	            z++;
                 }
             }
