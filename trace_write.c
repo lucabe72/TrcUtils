@@ -13,7 +13,7 @@ static void trace_log_int(uint32_t v)
 {
   uint32_t sw;
   sw = htonl(v);
-  write(1, (char *) &sw, 4);
+  fwrite(&sw, 4, 1, stdout);
 }
 
 static void trace_common(int type, int time, int task, int cpu)
@@ -71,7 +71,7 @@ void trc_creation(int pid, const char *name, int cpu,
   trace_common(TASK_NAME, utime, pid, cpu);
   len = strlen(name);
   trace_log_int(len);
-  write(1, name, len);
+  fwrite(name, len, 1, stdout);
   //fprintf(stdout, "%d %s\n", len, name_pid);
 }
 
