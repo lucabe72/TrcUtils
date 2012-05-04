@@ -14,6 +14,9 @@ stats: stats.o trace_read.o trace_evt_handle.o stats_utils.o event_list.o task_n
 
 import: import.o event_create.o event_list.o trace_write.o pid_filter.o task_names.o jtrace_read.o ftrace_read.o
 
+visual: LDLIBS+=-lncurses
+visual: visual.o trace_read.o trace_evt_handle.o event_list.o task_names.o stats_events.o visual_gui.o
+
 clean:
 	rm -f $(APPS) *.o
 
