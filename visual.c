@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
       free(e);
     }
     done = feof(f) || (res < 0);
+    if (suEzo() == 'q') done = 1;
   }
 
   exitT();
