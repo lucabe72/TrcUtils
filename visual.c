@@ -82,7 +82,11 @@ int main(int argc, char *argv[])
 
   first_parameter = opts_parse(argc, argv);
   fname = argv[first_parameter];
-  f = fopen(fname, "r");
+  if (strcmp(fname, "-")) {
+    f = fopen(fname, "r");
+  } else {
+    f = stdin;
+  }
   if (f == NULL) {
     perror(fname);
 

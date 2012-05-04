@@ -71,7 +71,11 @@ int main(int argc, char *argv[])
 
   createPidsFilter(relevant_pids);
 
-  f = fopen(argv[first_param], "r");
+  if (strcmp(argv[first_param], "-")) {
+    f = fopen(argv[first_param], "r");
+  } else {
+    f = stdin;
+  }
   if (f == NULL) {
     perror("Cannot open input file");
 
