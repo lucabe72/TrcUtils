@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <getopt.h>
 
 #include "event.h"
@@ -31,9 +32,8 @@ static unsigned int opts_parse(int argc, char *argv[])
 
 static void stats_event_handle(const struct event *e)
 {
-  unsigned long int r, c, it, pdf;
+  unsigned long int r, c, it;
   static unsigned int time_back;
-  double cdf;
 
   switch (e->type) {
     case TASK_END:

@@ -1,8 +1,9 @@
-#include <curses.h>
-#include <string.h>
-#include <malloc.h>
 #include <sys/time.h>
 #include <signal.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <curses.h>
+#include <string.h>
 
 #include "task_names.h"
 #include "visual_gui.h"
@@ -529,7 +530,7 @@ char suEzo(void)
 
 void exitT(void)
 {
-    while (suEzo() != 'q') sleep(1);
+    while (suEzo() != 'q') usleep(100000);
     free(rows);
     rows = NULL;
     endwin();
