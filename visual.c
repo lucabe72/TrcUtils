@@ -100,7 +100,8 @@ int main(int argc, char *argv[])
 
     res = trace_read_event(f, 0, 0);
     while ((e = evt_get())) {
-      stats_event_handle(e);
+      if (e->task > 0)
+	stats_event_handle(e);
       free(e);
     }
     done = feof(f) || (res < 0);
