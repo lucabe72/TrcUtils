@@ -30,6 +30,16 @@ static int containsTask(int pid)
   return -1;
 }
 
+static void utilisation_print(void *l, unsigned long int time, int task,
+		       float cpu, float cpuw, float cpua)
+{
+  if (l == NULL) {
+    return;
+  }
+  //fprintf(l, "%ld %d %s %d %f %f %f\n", time, task, getTaskName(task), cpu_stat, cpu, cpuw, cpua);
+  fprintf(l, "%ld %d util %f %f %f\n", time, task, cpu, cpuw, cpua);
+}
+
 struct record *record_find(int pid)
 {
   int i = containsTask(pid);
@@ -189,29 +199,8 @@ void calculateCPUsUtil(void *l, unsigned long int time)
     }
     a /= tasks[i].cpus_util_size;
     //encod_stats_cpu(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
-    stats_print_float(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
+    utilisation_print(l, time, tasks[i].name, t, w, a);
   }
 }
 
-void stats_pmf_out(void)
-{
-  int i;
 
-  for (i = 0; i < size_tasks; i++) {
-    char fname[32];
-    FILE *f;
-
-    sprintf(fname, "%d-exec.txt", tasks[i].name);
-    f = fopen(fname, "w");
-    pmf_write(f, &tasks[i].records[2]);
-    fclose(f);
-    sprintf(fname, "%d-interarrival.txt", tasks[i].name);
-    f = fopen(fname, "w");
-    pmf_write(f, &tasks[i].records[0]);
-    fclose(f);
-    sprintf(fname, "%d-response.txt", tasks[i].name);
-    f = fopen(fname, "w");
-    pmf_write(f, &tasks[i].records[1]);
-    fclose(f);
-  }
-}

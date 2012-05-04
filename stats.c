@@ -19,13 +19,13 @@ static unsigned int opts_parse(int argc, char *argv[])
 {
   int c;
 
-  while ((c = getopt(argc, argv, "ps:e:f:")) != -1)
+  while ((c = getopt(argc, argv, "p:s:e:f:")) != -1)
     switch (c) {
       case 'f':
 	l = fopen(optarg, "r");
 	break;
       case 'p':
-	do_pmf = 1;
+	do_pmf = atoi(optarg);
 	break;
       case 's':
 	start_time = atoi(optarg);
@@ -90,6 +90,25 @@ static void stats_event_handle(const struct event *e)
   }
 }
 
+static void stats_pmf_out(int pid)
+{
+  char fname[32];
+  FILE *f;
+
+  sprintf(fname, "%d-exec.txt", pid);
+  f = fopen(fname, "w");
+  pmf_write(f, pid, 2);
+  fclose(f);
+  sprintf(fname, "%d-interarrival.txt", pid);
+  f = fopen(fname, "w");
+  pmf_write(f, pid, 0);
+  fclose(f);
+  sprintf(fname, "%d-response.txt", pid);
+  f = fopen(fname, "w");
+  pmf_write(f, pid, 1);
+  fclose(f);
+}
+
 int main(int argc, char *argv[])
 {
   FILE *f;
@@ -129,7 +148,7 @@ int main(int argc, char *argv[])
   }
 
   if (do_pmf) {
-    stats_pmf_out();
+    stats_pmf_out(do_pmf);
   }
 
   return 0;

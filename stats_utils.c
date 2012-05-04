@@ -121,9 +121,11 @@ static int entries_cmp(const void *a, const void *b)
   return pa->time > pb->time;
 }
 
-void pmf_write(FILE *f, struct record *r)
+void pmf_write(FILE *f, int pid, int type)
 {
   int i, sum;
+  struct record *r1 = record_find(pid);
+  struct record *r = &r1[type];
 
   qsort(r->entries, r->size, sizeof(struct record_entry), entries_cmp); 
   sum = 0;
@@ -164,13 +166,4 @@ void stats_print_int(void *l, unsigned long int time, int task,
 	  pdf, cdf);
 }
 
-void stats_print_float(void *l, unsigned long int time, int task,
-		       int type, float cpu, float cpuw, float cpua)
-{
-  if (l == NULL) {
-    return;
-  }
-  //fprintf(l, "%ld %d %s %d %f %f %f\n", time, task, getTaskName(task), cpu_stat, cpu, cpuw, cpua);
-  fprintf(l, "%ld %d %s %f %f %f\n", time, task, stat_name[type], cpu,
-	  cpuw, cpua);
-}
+
