@@ -7,6 +7,8 @@
 #include "task_names.h"
 #include "visual_gui.h"
 
+#define MAX_CPUS 8
+
 struct row {
     int pid;
     int p_e, p_u, p_r;
@@ -22,7 +24,7 @@ struct row {
     float cpu_util;
     float cpu_wutil;
     float cpu_autil;
-    char name[16];
+    char name[64];
 };
 
 static const char *title =
@@ -401,7 +403,7 @@ void updateRT(int pid, long long int t)
     int i = find(pid);
 
     if (i < 0) {
-      createPidRow(pid, 0);		//FIXME: CPU
+      createPidRow(pid, -1);		//FIXME: CPU
       i = find(pid);
     }
     rows[i].rt = t;
@@ -418,7 +420,7 @@ void updateET(int pid, long long int t)
     int i = find(pid);
 
     if (i < 0) {
-      createPidRow(pid, 0);		//FIXME: CPU
+      createPidRow(pid, -1);		//FIXME: CPU
       i = find(pid);
     }
     rows[i].et = t;
@@ -429,7 +431,7 @@ void updateI(int pid, long long int t)
     int i = find(pid);
 
     if (i < 0) {
-      createPidRow(pid, 0);		//FIXME: CPU
+      createPidRow(pid, -1);		//FIXME: CPU
       i = find(pid);
     }
     rows[i].i = t;
@@ -444,7 +446,22 @@ void updatePDFI(int pid, long long int t, int periodic)
 void createPidRow(int id, int cpu)
 {
     int i;
-    const char *name = name_get(id, cpu);
+    const char *name;
+
+    if (cpu >= 0) {
+      name = name_get(id, cpu);
+    } else {
+      for (i = 0; i < MAX_CPUS; i++) {
+        name = name_get(id, i);
+        if (name) {
+          i = MAX_CPUS;
+        }
+      }
+    }
+    if (name == NULL) {
+      fprintf(stderr, "Cannot find %d %d\n", id, cpu);
+      abort();
+    }
 
     rows = (struct row *) realloc(rows, ++ipid * sizeof(struct row));
     rows[ipid - 1].pid = id;
@@ -457,6 +474,8 @@ void createPidRow(int id, int cpu)
     rows[ipid - 1].et = -1;
     rows[ipid - 1].pdf_et = -1;
     rows[ipid - 1].cpu_util = 0;
+    rows[ipid - 1].cpu_wutil = 0;
+    rows[ipid - 1].cpu_autil = 0;
     rows[ipid - 1].p_r = 0;
     rows[ipid - 1].p_e = 0;
     rows[ipid - 1].p_u = 0;
