@@ -64,14 +64,6 @@ static int xa, xw, xn, x0, x1, x2, x3, x4, x7, x8, x9, t0, COLUMN_Y2_max,
     COLUMN_Y2_min, ipid = 0;
 static struct row *rows = NULL;
 
-static int max(int c, int x)
-{
-    if (c > x)
-	return c;
-    else
-	return x;
-}
-
 static long long int get_avg(long long int *samples)
 {
   int i, count ;
@@ -114,67 +106,67 @@ static int is_periodic(long long int *samples)
 
 static void showPidRow(int key, int y)
 {
-    char cpu_wutil[max(CO, strlen(hw))];
-    char cpu_autil[max(CO, strlen(ha))];
-    char cpu_util[max(CO, strlen(h9))];
-    char avg_i[max(CO, strlen(h8))];
-    char _i[max(CO, strlen(h7))];
-    char avg_et[max(CO, strlen(h4))];
-    char et[max(CO, strlen(h3))];
-    char avg_rt[max(CO, strlen(h2))];
-    char rt[max(CO, strlen(h1))];
-    char pid_s[max(C0, strlen(h0))];
-    char name_t[max(CN, strlen(hN))];
+    char cpu_wutil[strlen(hw)];
+    char cpu_autil[strlen(ha)];
+    char cpu_util[strlen(h9)];
+    char avg_i[strlen(h8)];
+    char _i[strlen(h7)];
+    char avg_et[strlen(h4)];
+    char et[strlen(h3)];
+    char avg_rt[strlen(h2)];
+    char rt[strlen(h1)];
+    char pid_s[strlen(h0)];
+    char name_t[strlen(hN)];
 
     if (rows[key].cpu_util == 0) {	//No data
-	sprintf(cpu_autil, "%*c", max(CO, strlen(ha)), '0');
+	sprintf(cpu_autil, "%*c", strlen(ha), '0');
     } else {
-	sprintf(cpu_autil, "%*f", max(CO, strlen(ha)),
+	sprintf(cpu_autil, "%*f", strlen(ha),
 		rows[key].cpu_autil);
     }
     if (rows[key].cpu_wutil == 0) {
-	sprintf(cpu_wutil, "%*c", max(CO, strlen(hw)), '0');
+	sprintf(cpu_wutil, "%*c", strlen(hw), '0');
     } else {
-	sprintf(cpu_wutil, "%*f", max(CO, strlen(hw)),
+	sprintf(cpu_wutil, "%*f", strlen(hw),
 		rows[key].cpu_wutil);
     }
     if (rows[key].cpu_util == 0) {
-	sprintf(cpu_util, "%*c", max(CO, strlen(h9)), '0');
+	sprintf(cpu_util, "%*c", strlen(h9), '0');
     } else {
-	sprintf(cpu_util, "%*f", max(CO, strlen(h9)), rows[key].cpu_util);
+	sprintf(cpu_util, "%*f", strlen(h9), rows[key].cpu_util);
     }
     if (get_avg(rows[key].it) == -1) {
-	sprintf(avg_i, "%*c", max(CO, strlen(h8)), '-');
+	sprintf(avg_i, "%*c", strlen(h8), '-');
     } else {
-	sprintf(avg_i, "%*lld", max(CO, strlen(h8)), get_avg(rows[key].it));
+	sprintf(avg_i, "%*lld", strlen(h8), get_avg(rows[key].it));
     }
     if (rows[key].it[rows[key].it_idx] == -1) {
-	sprintf(_i, "%*c", max(CO, strlen(h7)), '-');
+	sprintf(_i, "%*c", strlen(h7), '-');
     } else {
-	sprintf(_i, "%*lld", max(CO, strlen(h7)), rows[key].it[rows[key].it_idx]);
+	sprintf(_i, "%*lld", strlen(h7), rows[key].it[rows[key].it_idx]);
     }
     if (get_avg(rows[key].c) == -1) {
-	sprintf(avg_et, "%*c", max(CO, strlen(h4)), '-');
+	sprintf(avg_et, "%*c", strlen(h4), '-');
     } else {
-	sprintf(avg_et, "%*lld", max(CO, strlen(h4)), get_avg(rows[key].c));
+	sprintf(avg_et, "%*lld", strlen(h4), get_avg(rows[key].c));
     }
     if (rows[key].c[rows[key].c_idx] == -1) {
-	sprintf(et, "%*c", max(CO, strlen(h3)), '-');
+	sprintf(et, "%*c", strlen(h3), '-');
     } else {
-	sprintf(et, "%*lld", max(CO, strlen(h3)), rows[key].c[rows[key].c_idx]);
+	sprintf(et, "%*lld", strlen(h3), rows[key].c[rows[key].c_idx]);
     }
     if (get_avg(rows[key].r) == -1) {
-	sprintf(avg_rt, "%*c", max(CO, strlen(h2)), '-');
+	sprintf(avg_rt, "%*c", strlen(h2), '-');
     } else {
-	sprintf(avg_rt, "%*lld", max(CO, strlen(h2)), get_avg(rows[key].r));
+	sprintf(avg_rt, "%*lld", strlen(h2), get_avg(rows[key].r));
     }
     if (rows[key].r[rows[key].r_idx] == -1) {
-	sprintf(rt, "%*c", max(CO, strlen(h1)), '-');
+	sprintf(rt, "%*c", strlen(h1), '-');
     } else {
-	sprintf(rt, "%*lld", max(CO, strlen(h1)), rows[key].r[rows[key].r_idx]);
+	sprintf(rt, "%*lld", strlen(h1), rows[key].r[rows[key].r_idx]);
     }
-    sprintf(pid_s, "%*d", max(C0, strlen(h0)), rows[key].pid);
-    sprintf(name_t, "%*s", max(CN, strlen(hN)), rows[key].name);
+    sprintf(pid_s, "%*d", strlen(h0), rows[key].pid);
+    sprintf(name_t, "%*s", strlen(hN), rows[key].name);
 
     mvaddstr(y, xa, cpu_autil);
     mvaddstr(y, xw, cpu_wutil);
