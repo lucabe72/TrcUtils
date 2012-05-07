@@ -9,17 +9,14 @@
 #include "visual_gui.h"
 
 #define MAX_CPUS 8
+#define WIN_SIZE 16
+#define TOLERANCE 100
 
 struct row {
+    long long int r[WIN_SIZE], c[WIN_SIZE], it[WIN_SIZE];
+    int r_idx, c_idx, it_idx;
     int pid;
-    int p_e, p_u, p_r;
     int y;
-    long long int i;
-    long long int pdf_i;
-    long long int rt;
-    long long int pdf_rt;
-    long long int et;
-    long long int pdf_et;
     long long int ei;
     long long int pdf_ei;
     float cpu_util;
@@ -60,16 +57,56 @@ static int max(int c, int x)
 	return x;
 }
 
+static long long int get_avg(long long int *samples)
+{
+  int i, count ;
+  long long int res;
+
+  res = 0;
+  count = 0;
+  for (i = 0; i < WIN_SIZE; i++) {
+    if (samples[i] >= 0) {
+      res += samples[i];
+      count += 1;
+    }
+  }
+  if (count == 0) {
+    return -1;
+  }
+
+  return res / count;
+}
+
+static int is_periodic(long long int *samples)
+{
+  int i;
+  long long int smin = -1, smax = -1;
+
+  for (i = 0; i < WIN_SIZE; i++) {
+    if (samples[i] >= 0) {
+      if (smin == -1) {
+        smin = smax = samples[i];
+      } else if (samples[i] < smin) smin = samples[i];
+      else if (samples[i] > smax) smax = samples[i];
+    }
+  }
+  if (smin == -1) {
+    return 0;
+  }
+
+  return (smax - smin) < TOLERANCE;
+}
+
 static void showPidRow(int key, int y)
 {
     char cpu_wutil[max(CO, strlen(hw))];
     char cpu_autil[max(CO, strlen(ha))];
     char cpu_util[max(CO, strlen(h9))];
-    char pdf_i[max(CO, strlen(h8))];
+    char avg_i[max(CO, strlen(h8))];
     char _i[max(CO, strlen(h7))];
-    char pdf_et[max(CO, strlen(h4))];
+    char avg_et[max(CO, strlen(h4))];
     char et[max(CO, strlen(h3))];
-    char pdf_rt[max(CO, strlen(h2))];
+    char avg_rt[max(CO, strlen(h2))];
     char rt[max(CO, strlen(h1))];
     char pid_s[max(C0, strlen(h0))];
     char name_t[max(CN, strlen(hN))];
@@ -87,25 +124,25 @@ static void showPidRow(int key, int y)
     }
     cpu_util[i] = '\0';
     for (i = 0; i < max(CO, strlen(h8)); i++) {
-	pdf_i[i] = ' ';
+	avg_i[i] = ' ';
     }
-    pdf_i[i] = '\0';
+    avg_i[i] = '\0';
     for (i = 0; i < max(CO, strlen(h7)); i++) {
 	_i[i] = ' ';
     }
     _i[i] = '\0';
     for (i = 0; i < max(CO, strlen(h4)); i++) {
-	pdf_et[i] = ' ';
+	avg_et[i] = ' ';
     }
-    pdf_et[i] = '\0';
+    avg_et[i] = '\0';
     for (i = 0; i < max(CO, strlen(h3)); i++) {
 	et[i] = ' ';
     }
     et[i] = '\0';
     for (i = 0; i < max(CO, strlen(h2)); i++) {
-	pdf_rt[i] = ' ';
+	avg_rt[i] = ' ';
     }
-    pdf_rt[i] = '\0';
+    avg_rt[i] = '\0';
     for (i = 0; i < max(CO, strlen(h1)); i++) {
 	rt[i] = ' ';
     }
@@ -122,11 +159,11 @@ static void showPidRow(int key, int y)
     mvaddstr(y, xa, cpu_autil);
     mvaddstr(y, xw, cpu_wutil);
     mvaddstr(y, x9, cpu_util);
-    mvaddstr(y, x8, pdf_i);
+    mvaddstr(y, x8, avg_i);
     mvaddstr(y, x7, _i);
-    mvaddstr(y, x4, pdf_et);
+    mvaddstr(y, x4, avg_et);
     mvaddstr(y, x3, et);
-    mvaddstr(y, x2, pdf_rt);
+    mvaddstr(y, x2, avg_rt);
     mvaddstr(y, x1, rt);
     mvaddstr(y, x0, pid_s);
     mvaddstr(y, xn, name_t);
@@ -148,35 +185,35 @@ static void showPidRow(int key, int y)
     } else {
 	sprintf(cpu_util, "%*f", max(CO, strlen(h9)), rows[key].cpu_util);
     }
-    if (rows[key].pdf_i == -1) {
-	sprintf(pdf_i, "%*c", max(CO, strlen(h8)), '-');
+    if (get_avg(rows[key].it) == -1) {
+	sprintf(avg_i, "%*c", max(CO, strlen(h8)), '-');
     } else {
-	sprintf(pdf_i, "%*lld", max(CO, strlen(h8)), rows[key].pdf_i);
+	sprintf(avg_i, "%*lld", max(CO, strlen(h8)), get_avg(rows[key].it));
     }
-    if (rows[key].i == -1) {
+    if (rows[key].it[rows[key].it_idx] == -1) {
 	sprintf(_i, "%*c", max(CO, strlen(h7)), '-');
     } else {
-	sprintf(_i, "%*lld", max(CO, strlen(h7)), rows[key].i);
+	sprintf(_i, "%*lld", max(CO, strlen(h7)), rows[key].it[rows[key].it_idx]);
     }
-    if (rows[key].pdf_et == -1) {
-	sprintf(pdf_et, "%*c", max(CO, strlen(h4)), '-');
+    if (get_avg(rows[key].c) == -1) {
+	sprintf(avg_et, "%*c", max(CO, strlen(h4)), '-');
     } else {
-	sprintf(pdf_et, "%*lld", max(CO, strlen(h4)), rows[key].pdf_et);
+	sprintf(avg_et, "%*lld", max(CO, strlen(h4)), get_avg(rows[key].c));
     }
-    if (rows[key].et == -1) {
+    if (rows[key].c[rows[key].c_idx] == -1) {
 	sprintf(et, "%*c", max(CO, strlen(h3)), '-');
     } else {
-	sprintf(et, "%*lld", max(CO, strlen(h3)), rows[key].et);
+	sprintf(et, "%*lld", max(CO, strlen(h3)), rows[key].c[rows[key].c_idx]);
     }
-    if (rows[key].pdf_rt == -1) {
-	sprintf(pdf_rt, "%*c", max(CO, strlen(h2)), '-');
+    if (get_avg(rows[key].r) == -1) {
+	sprintf(avg_rt, "%*c", max(CO, strlen(h2)), '-');
     } else {
-	sprintf(pdf_rt, "%*lld", max(CO, strlen(h2)), rows[key].pdf_rt);
+	sprintf(avg_rt, "%*lld", max(CO, strlen(h2)), get_avg(rows[key].r));
     }
-    if (rows[key].rt == -1) {
+    if (rows[key].r[rows[key].r_idx] == -1) {
 	sprintf(rt, "%*c", max(CO, strlen(h1)), '-');
     } else {
-	sprintf(rt, "%*lld", max(CO, strlen(h1)), rows[key].rt);
+	sprintf(rt, "%*lld", max(CO, strlen(h1)), rows[key].r[rows[key].r_idx]);
     }
     sprintf(pid_s, "%*d", max(C0, strlen(h0)), rows[key].pid);
     sprintf(name_t, "%*s", max(CN, strlen(hN)), rows[key].name);
@@ -184,26 +221,26 @@ static void showPidRow(int key, int y)
     mvaddstr(y, xa, cpu_autil);
     mvaddstr(y, xw, cpu_wutil);
     mvaddstr(y, x9, cpu_util);
-    if (rows[key].p_u == 1) {
+    if (is_periodic(rows[key].it)) {
 	attron(A_BOLD | COLOR_PAIR(5));
     }
-    mvaddstr(y, x8, pdf_i);
+    mvaddstr(y, x8, avg_i);
     attroff(A_BOLD | COLOR_PAIR(5));
     mvaddstr(y, x7, _i);
-    if (rows[key].p_e == 1) {
+    if (is_periodic(rows[key].c)) {
 	attron(A_BOLD | COLOR_PAIR(5));
     }
-    mvaddstr(y, x4, pdf_et);
+    mvaddstr(y, x4, avg_et);
     attroff(A_BOLD | COLOR_PAIR(5));
     mvaddstr(y, x3, et);
-    if (rows[key].p_r == 1) {
+    if (is_periodic(rows[key].r)) {
 	attron(A_BOLD | COLOR_PAIR(5));
     }
-    mvaddstr(y, x2, pdf_rt);
+    mvaddstr(y, x2, avg_rt);
     attroff(A_BOLD | COLOR_PAIR(5));
     mvaddstr(y, x1, rt);
 
-    if (rows[key].p_u == 1 || rows[key].p_r == 1 || rows[key].p_e == 1) {
+    if (is_periodic(rows[key].it) || is_periodic(rows[key].c) || is_periodic(rows[key].r)) {
 	attron(A_BOLD | COLOR_PAIR(5));
     }
     mvaddstr(y, x0, pid_s);
@@ -393,12 +430,6 @@ void updateCPUsUtil(int pid, float t, float w, float a)
     rows[find(pid)].cpu_autil = a;
 }
 
-void updatePDFRT(int pid, long long int t, int periodic)
-{
-    rows[find(pid)].pdf_rt = t;
-    rows[find(pid)].p_r = periodic;
-}
-
 void updateRT(int pid, long long int t)
 {
     int i = find(pid);
@@ -407,13 +438,9 @@ void updateRT(int pid, long long int t)
       createPidRow(pid, -1);		//FIXME: CPU
       i = find(pid);
     }
-    rows[i].rt = t;
-}
-
-void updatePDFET(int pid, long long int t, int periodic)
-{
-    rows[find(pid)].pdf_et = t;
-    rows[find(pid)].p_e = periodic;
+    //rows[i].rt = t;
+    rows[i].r_idx = (rows[i].r_idx + 1) % WIN_SIZE;
+    rows[i].r[rows[i].r_idx] = t;
 }
 
 void updateET(int pid, long long int t)
@@ -424,7 +451,8 @@ void updateET(int pid, long long int t)
       createPidRow(pid, -1);		//FIXME: CPU
       i = find(pid);
     }
-    rows[i].et = t;
+    rows[i].c_idx = (rows[i].c_idx + 1) % WIN_SIZE;
+    rows[i].c[rows[i].c_idx] = t;
 }
 
 void updateI(int pid, long long int t)
@@ -435,13 +463,8 @@ void updateI(int pid, long long int t)
       createPidRow(pid, -1);		//FIXME: CPU
       i = find(pid);
     }
-    rows[i].i = t;
-}
-
-void updatePDFI(int pid, long long int t, int periodic)
-{
-    rows[find(pid)].pdf_i = t;
-    rows[find(pid)].p_u = periodic;
+    rows[i].it_idx = (rows[i].it_idx + 1) % WIN_SIZE;
+    rows[i].it[rows[i].it_idx] = t;
 }
 
 void createPidRow(int id, int cpu)
@@ -466,20 +489,16 @@ void createPidRow(int id, int cpu)
 
     rows = (struct row *) realloc(rows, ++ipid * sizeof(struct row));
     rows[ipid - 1].pid = id;
-    rows[ipid - 1].i = -1;
-    rows[ipid - 1].pdf_i = -1;
-    rows[ipid - 1].rt = -1;
-    rows[ipid - 1].pdf_rt = -1;
     rows[ipid - 1].ei = -1;
     rows[ipid - 1].pdf_ei = -1;
-    rows[ipid - 1].et = -1;
-    rows[ipid - 1].pdf_et = -1;
     rows[ipid - 1].cpu_util = 0;
     rows[ipid - 1].cpu_wutil = 0;
     rows[ipid - 1].cpu_autil = 0;
-    rows[ipid - 1].p_r = 0;
-    rows[ipid - 1].p_e = 0;
-    rows[ipid - 1].p_u = 0;
+
+    for (i = 0; i < WIN_SIZE; i++) {
+      rows[ipid - 1].c[i] = rows[ipid - 1].r[i] = rows[ipid - 1].it[i] = -1;
+    }
+    rows[ipid - 1].r_idx = rows[ipid - 1].c_idx = rows[ipid - 1].it_idx = 0;
 
     for (i = 0; name[i] != '\0'; i++) {
 	(rows[ipid - 1].name)[i] = name[i];
