@@ -125,66 +125,6 @@ static void showPidRow(int key, int y)
     char rt[max(CO, strlen(h1))];
     char pid_s[max(C0, strlen(h0))];
     char name_t[max(CN, strlen(hN))];
-    int i;
-
-#if 0
-    for (i = 0; i < max(CO, strlen(hw)); i++) {
-	cpu_wutil[i] = ' ';
-    }
-    cpu_wutil[i] = '\0';
-    for (i = 0; i < max(CO, strlen(ha)); i++) {
-	cpu_autil[i] = ' ';
-    }
-    cpu_autil[i] = '\0';
-    for (i = 0; i < max(CO, strlen(h9)); i++) {
-	cpu_util[i] = ' ';
-    }
-    cpu_util[i] = '\0';
-    for (i = 0; i < max(CO, strlen(h8)); i++) {
-	avg_i[i] = ' ';
-    }
-    avg_i[i] = '\0';
-    for (i = 0; i < max(CO, strlen(h7)); i++) {
-	_i[i] = ' ';
-    }
-    _i[i] = '\0';
-    for (i = 0; i < max(CO, strlen(h4)); i++) {
-	avg_et[i] = ' ';
-    }
-    avg_et[i] = '\0';
-    for (i = 0; i < max(CO, strlen(h3)); i++) {
-	et[i] = ' ';
-    }
-    et[i] = '\0';
-    for (i = 0; i < max(CO, strlen(h2)); i++) {
-	avg_rt[i] = ' ';
-    }
-    avg_rt[i] = '\0';
-    for (i = 0; i < max(CO, strlen(h1)); i++) {
-	rt[i] = ' ';
-    }
-    rt[i] = '\0';
-    for (i = 0; i < max(C0, strlen(h0)); i++) {
-	pid_s[i] = ' ';
-    }
-    pid_s[i] = '\0';
-    for (i = 0; i < max(CN, strlen(hN)); i++) {
-	name_t[i] = ' ';
-    }
-    name_t[i] = '\0';
-
-    mvaddstr(y, xa, cpu_autil);
-    mvaddstr(y, xw, cpu_wutil);
-    mvaddstr(y, x9, cpu_util);
-    mvaddstr(y, x8, avg_i);
-    mvaddstr(y, x7, _i);
-    mvaddstr(y, x4, avg_et);
-    mvaddstr(y, x3, et);
-    mvaddstr(y, x2, avg_rt);
-    mvaddstr(y, x1, rt);
-    mvaddstr(y, x0, pid_s);
-    mvaddstr(y, xn, name_t);
-#endif
 
     if (rows[key].cpu_util == 0) {	//No data
 	sprintf(cpu_autil, "%*c", max(CO, strlen(ha)), '0');
