@@ -10,7 +10,7 @@
 #define COLUMN_Y2 6
 #define COLUMN_X 1
 #define C0 5
-#define CO 10
+#define CO 6
 #define CN 15
 
 void initializeT(unsigned long int tollerance);

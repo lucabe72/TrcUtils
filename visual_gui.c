@@ -29,22 +29,37 @@ static const char *title =
     "FTrace Stats - Response Time, Execution Time, Intervals and more";
 static const char *time_title = "Misured time:";
 static const char *tollerance_title = "Tollerance  :";
-static const char
-*l0 = "R Time - Response Time             ",
+static const char *l0 = "R Time - Response Time             ",
     *l1 = "E Time - Execution Time            ",
     *l2 = "I Time - Intervall Time            ",
-    *l3 =
-    "PDFm - the mode of the probability density function            ",
-    *l4 = "A - average case ", *l5 = "W - worst case ", *l6 =
-    "Up - u, Down - d ", *l7 = "Quit - q         ", *l8 =
-    "Periodicity", *hN = "  Task's name  ", *hNN = "", *h0 =
-    " PID ", *h00 = "  #  ", *h1 = "  R Time  ", *h11 = "    us    ", *h2 =
-    "PDFm R Time", *h22 = "    us    ", *h3 = "  E Time  ", *h33 =
-    "    us    ", *h4 = "PDFm E Time", *h44 = "    us    ", *h7 =
-    "  I Time  ", *h77 = "    us    ", *h8 = "PDFm I Time", *h88 =
-    "    us    ", *h9 = "CPUs Utiliz", *h99 = "  \% at sec ", *hw =
-    "W CPUs Uti.", *hw0 = "     \%     ", *ha = "A CPUs Uti.", *ha0 =
-    "     \%     ";
+    *l3 = "PDFm - the mode of the probability density function            ",
+    *l4 = "A - average case ",
+    *l5 = "W - worst case ",
+    *l6 = "Up - u, Down - d ",
+    *l7 = "Quit - q         ",
+    *l8 = "Periodicity",
+    *hN = "Task's name",
+    *hNN = "",
+    *h0 = " PID ",
+    *h00 = "  #  ",
+    *h1 = "Response Time",
+    *h11 = "     us     ",
+    *h2 = "Average",
+    *h22 = "  us  ",
+    *h3 = "  Exec Time",
+    *h33 = "    us    ",
+    *h4 = "Average",
+    *h44 = "  us  ",
+    *h7 = "  Inter-Arrival Time",
+    *h77 = "           us      ",
+    *h8 = "Average",
+    *h88 = "  us  ",
+    *h9 = "CPUs Utiliz",
+    *h99 = "  \% at sec ",
+    *hw = "W CPUs Uti.",
+    *hw0 = "     \%     ",
+    *ha = "A CPUs Uti.",
+    *ha0 = "     \%     ";
 static int xa, xw, xn, x0, x1, x2, x3, x4, x7, x8, x9, t0, COLUMN_Y2_max,
     COLUMN_Y2_min, ipid = 0;
 static struct row *rows = NULL;
@@ -111,6 +126,8 @@ static void showPidRow(int key, int y)
     char pid_s[max(C0, strlen(h0))];
     char name_t[max(CN, strlen(hN))];
     int i;
+
+#if 0
     for (i = 0; i < max(CO, strlen(hw)); i++) {
 	cpu_wutil[i] = ' ';
     }
@@ -167,6 +184,7 @@ static void showPidRow(int key, int y)
     mvaddstr(y, x1, rt);
     mvaddstr(y, x0, pid_s);
     mvaddstr(y, xn, name_t);
+#endif
 
     if (rows[key].cpu_util == 0) {	//No data
 	sprintf(cpu_autil, "%*c", max(CO, strlen(ha)), '0');
