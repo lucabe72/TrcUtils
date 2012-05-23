@@ -27,6 +27,17 @@
 static int trace_type;
 static const char *relevant_pids;
 
+static void help(const char *name)
+{
+  fprintf(stdout, "Usage:\n");
+  fprintf(stdout, "%s [options] <input file>\n\n", name);
+
+  fprintf(stdout, "Options:\n");
+  fprintf(stdout, "-j \tConvert from RTSim format\n");
+  fprintf(stdout, "-p <pid> \tAdd <pid> to the PID filter\n");
+  exit(-1);
+}
+
 static unsigned int param(int argc, char *argv[])
 {
   int c;
@@ -52,7 +63,7 @@ static unsigned int param(int argc, char *argv[])
 	relevant_pids = optarg;
 	break;
       default:
-	exit(-1);
+        help(argv[0]);
     }
 
   return optind;
@@ -86,9 +97,7 @@ int main(int argc, char *argv[])
 
   first_param = param(argc, argv);
   if (argc - first_param < 1) {
-    fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-
-    return -1;
+    help(argv[0]);
   }
 
   createPidsFilter(relevant_pids);

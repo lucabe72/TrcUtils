@@ -24,17 +24,19 @@
 static int output_type;
 static int start_time, end_time;
 
-static void help(void)
+static void help(const char *name)
 {
   fprintf(stdout, "Usage:\n");
-  fprintf(stdout, "trc2fig <options> file\n\n");
+  fprintf(stdout, "%s [options] <input file>\n\n", name);
 
   fprintf(stdout, "Options:\n");
-  fprintf(stdout, "-C n\tMaximum number of CPU\n");
-  fprintf(stdout, "-E n\tMaximum number of events\n");
-  fprintf(stdout, "-S n\tMaximum number of servers\n");
   fprintf(stdout, "-s t\tStart time\n");
-  fprintf(stdout, "-e t\tEnd Time\n");
+  fprintf(stdout, "-e t\tEnd time\n");
+  fprintf(stdout, "-i \tOutput trace information\n");
+  fprintf(stdout, "-d \tOutput trace in text\n");
+  fprintf(stdout, "-t \tOutput trace in internal format\n");
+  fprintf(stdout, "-j \tOutput trace in RTSim format\n");
+  exit(-1);
 }
 
 static unsigned int param(int argc, char *argv[])
@@ -62,8 +64,7 @@ static unsigned int param(int argc, char *argv[])
 	output_type = OUTPUT_RTSIM;
 	break;
       default:
-	help();
-	exit(2);
+	help(argv[0]);
     }
   }
 
@@ -82,7 +83,7 @@ int main(int argc, char *argv[])
   first_arg = param(argc, argv);
 
   if (first_arg >= argc) {
-    fprintf(stderr, "Usage: %s [options] <input file>\n", argv[0]);
+    help(argv[0]);
   }
 
   fname = argv[first_arg];
