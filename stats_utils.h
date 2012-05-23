@@ -1,3 +1,9 @@
+/*
+ * This is free software: see GPL.txt
+ */
+#ifndef STATS_UTILS_H
+#define STATS_UTILS_H
+
 #define EXECUTION_TIME 0
 #define RESPONSE_TIME 1
 #define INTERVALL_TIME 2
@@ -25,3 +31,5 @@ void stats_print_int(void *l, unsigned long int time, int task,
 float cdf_executions(int pid, unsigned long int time);
 
 float cdf_intervalls(int pid, unsigned long int time);
+
+#endif	/* STATS_UTILS_H */

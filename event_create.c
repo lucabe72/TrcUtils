@@ -1,3 +1,6 @@
+/*
+ * This is free software: see GPL.txt
+ */
 #include <stdio.h>
 
 #include "event.h"

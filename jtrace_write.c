@@ -1,3 +1,6 @@
+/*
+ * This is free software: see GPL.txt
+ */
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdlib.h>

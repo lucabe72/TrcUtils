@@ -1,3 +1,6 @@
+/*
+ * This is free software: see GPL.txt
+ */
 #include <sys/time.h>
 #include <signal.h>
 #include <unistd.h>

@@ -1,3 +1,6 @@
+/*
+ * This is free software: see GPL.txt
+ */
 #include <netinet/in.h>
 #include <sys/types.h>
 #include <stdlib.h>
