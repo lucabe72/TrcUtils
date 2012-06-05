@@ -119,9 +119,9 @@ static void trace(unsigned long long int time, int cpid, char *taskc, int opid, 
 
 long long int oftrace_parse(FILE * f)
 {
-  char line[256];
+  char line[79];
   char *res;
-  long long int current_time = -1;
+  long long int current_time;
 
 
   if (cpu_events == NULL) {
@@ -179,8 +179,11 @@ long long int oftrace_parse(FILE * f)
       }
 
       trace(current_time, cpid, taskc, opid, tasko, sched, cstate, ostate, cpul, cpur);
+    } else {
+      current_time = 0;
     }
   } else {
+    current_time = -1;
     free(new_pids);
     free(cpu_events);
     free(last_pid_run);
