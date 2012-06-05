@@ -182,7 +182,7 @@ long long int l4trace_parse(FILE * f)
       //sscanf(line, "%[^[][%d]%lu.%lu:%s%[^!]",
       sscanf(line, "%s %s %lu",
 	     taskc, event, &us);
-      fprintf(stderr,"Task %s at %lu on CPU %d does %s\n", taskc, us,
+      dprintf("Task %s at %lu on CPU %d does %s\n", taskc, us,
 	      cpu, event);
       current_time=us;
       if (strcmp(taskc,"????")!=0)
