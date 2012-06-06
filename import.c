@@ -33,7 +33,11 @@ static void help(const char *name)
   fprintf(stdout, "%s [options] <input file>\n\n", name);
 
   fprintf(stdout, "Options:\n");
+  fprintf(stdout, "-x \tConvert from X server trace format (you need to patch X)\n");
+  fprintf(stdout, "-t \tImport a TrcUtils trace (almost useless)\n");
+  fprintf(stdout, "-o \tImport from the old (sched_switch) FTrace format\n");
   fprintf(stdout, "-j \tConvert from RTSim format\n");
+  fprintf(stdout, "-j \tConvert from the Fiasco ukernel format\n");
   fprintf(stdout, "-p <pid> \tAdd <pid> to the PID filter\n");
   exit(-1);
 }

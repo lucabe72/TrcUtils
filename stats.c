@@ -24,7 +24,7 @@ static void help(const char *name)
   fprintf(stdout, "%s [options] <input file>\n\n", name);
 
   fprintf(stdout, "Options:\n");
-  fprintf(stdout, "-f <file> \tInput file\n");
+  fprintf(stdout, "-f <file> \tOutput file\n");
   fprintf(stdout, "-p \tGenerate PFMs as output\n");
   fprintf(stdout, "-s t\tStart time\n");
   fprintf(stdout, "-e t\tEnd time\n");
@@ -38,7 +38,7 @@ static unsigned int opts_parse(int argc, char *argv[])
   while ((c = getopt(argc, argv, "p:s:e:f:")) != -1)
     switch (c) {
       case 'f':
-	l = fopen(optarg, "r");
+	l = fopen(optarg, "w");
 	break;
       case 'p':
 	do_pmf = atoi(optarg);
@@ -136,12 +136,16 @@ int main(int argc, char *argv[])
   if (!l) {
     l = stdout;
   }
-  fname = argv[first_parameter];
-  f = fopen(fname, "r");
-  if (f == NULL) {
-    perror(fname);
+  if (first_parameter < argc) {
+    fname = argv[first_parameter];
+    f = fopen(fname, "r");
+    if (f == NULL) {
+      perror(fname);
 
-    return -1;
+      return -1;
+    }
+  } else {
+    f = stdin;
   }
 
   done = 0;

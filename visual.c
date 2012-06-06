@@ -93,12 +93,16 @@ int main(int argc, char *argv[])
   int first_parameter;
 
   first_parameter = opts_parse(argc, argv);
-  fname = argv[first_parameter];
-  f = fopen(fname, "r");
-  if (f == NULL) {
-    perror(fname);
+  if (first_parameter < argc) {
+    fname = argv[first_parameter];
+    f = fopen(fname, "r");
+    if (f == NULL) {
+      perror(fname);
 
-    return -1;
+      return -1;
+    }
+  } else {
+    f = stdin;
   }
 
   initializeT(tolerance);
