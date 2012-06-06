@@ -1,6 +1,9 @@
 This is a pre-release of TrcUtils, a set of filters allowing to handle
 traces generate by different tools, converting them between various formats,
-extracting statistics, and visualising them in varions way.
+extracting statistics, and visualising them in various way.
+
+Stable releases will be published on the TrcUtils home page:
+http://disi.unitn.it/~abeni/TrcUtils/
 
 Currently, 4 filters are provided:
 - import: convert traces from ftrace (old and new format), rtsim, Fiasco
