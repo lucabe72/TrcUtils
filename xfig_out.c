@@ -222,10 +222,10 @@ void task_plot(struct event ev[], int i, int s, int id, int tid,
 	  break;
 	case TASK_SCHEDULE:
 	  if (start != -1) {
-	    fprintf(stderr,
-		    "[%d] Error: Task %d arrives at time %d with arr = %d\n",
+/*	    fprintf(stderr,
+		    "[%d] Error: Task %d schedule at time %d with arr = %d\n",
 		    j, id, ev[j].time, start);
-	    exit(-1);
+	    exit(-1); */
 	  }
 	  start = ev[j].time;
 	  break;

@@ -1,0 +1,103 @@
+Index: src/kern/sched_context.cpp
+===================================================================
+--- src/kern/sched_context.cpp	(revision 38)
++++ src/kern/sched_context.cpp	(working copy)
+@@ -18,7 +18,6 @@
+ Sched_context::rq(unsigned cpu)
+ { return _ready_q.cpu(cpu); }
+ 
+-
+ /**
+  * \param cpu must be current_cpu()
+  */
+Index: src/kern/context.cpp
+===================================================================
+--- src/kern/context.cpp	(revision 38)
++++ src/kern/context.cpp	(working copy)
+@@ -716,7 +716,9 @@
+ #endif
+   if (in_ready_list())
+     ready_dequeue();
+-
++  
++  LOG_MSG_3VAL(current_sched()->context(),"SCHED_TASK_DES",2,0,1); 
++  //LOG_TRACE("SCHED_TRACER","TASK_DESCHEDULE",(Context *)current_sched(),2,0); 
+   set_sched(next);
+   ready_enqueue();
+ }
+@@ -855,6 +857,7 @@
+   // Program new end-of-timeslice timeout
+   tt->reset();
+   tt->set(clock + sched->left(), cpu);
++  LOG_MSG_3VAL(sched->context(),"SCHED_TASK_SCH",1,0,1); 
+ 
+   // Make this timeslice current
+   rq.activate(sched);
+@@ -997,7 +1000,7 @@
+   (void)check;
+   assert_kdb(!check || current_cpu() == cpu());
+   //Lock_guard <Cpu_lock> guard (&cpu_lock);
+-
++  LOG_MSG_3VAL(sched()->context(),"SCHED_TASK_ARR",0,0,0); 
+   // Don't enqueue threads that are not ready or have no own time
+   if (EXPECT_FALSE (!(state(check) & Thread_ready_mask) || !sched()->left()))
+     return;
+@@ -1177,9 +1180,11 @@
+   assert_kdb (cpu_lock.test());
+ 
+   // Switch to destination thread's scheduling context
+-  if (current_sched() != t->sched())
++  if (current_sched() != t->sched()){
++    LOG_MSG_3VAL(current_sched()->context(),"SCHED_TASK_DES",2,0,2); 
++    LOG_MSG_3VAL(t->sched()->context(),"SCHED_TASK_SCH",1,0,2); 
+     set_current_sched(t->sched());
+-
++    }
+   // XXX: IPC dependency tracking belongs here.
+ 
+   // Switch to destination thread's execution context, no helping involved
+Index: src/kern/sched_context-fixed_prio.cpp
+===================================================================
+--- src/kern/sched_context-fixed_prio.cpp	(revision 38)
++++ src/kern/sched_context-fixed_prio.cpp	(working copy)
+@@ -9,6 +9,7 @@
+ #include "types.h"
+ #include "globals.h"
+ #include "ready_queue_fp.h"
++#include "logdefs.h"
+ 
+ 
+ class Sched_context
+@@ -64,7 +65,9 @@
+   _prio(Config::default_prio),
+   _quantum(Config::default_time_slice),
+   _left(Config::default_time_slice)
+-{}
++{
++  LOG_MSG_3VAL(this->context(),"SCHED_TASK_CRE",9,0,0); 
++}
+ 
+ 
+ /**
+Index: src/kern/timeslice_timeout.cpp
+===================================================================
+--- src/kern/timeslice_timeout.cpp	(revision 38)
++++ src/kern/timeslice_timeout.cpp	(working copy)
+@@ -13,6 +13,7 @@
+ #include "globals.h"
+ #include "sched_context.h"
+ #include "std_macros.h"
++#include "logdefs.h"
+ 
+ /* Initialize global valiable timeslice_timeout */
+ Per_cpu<Timeout *> timeslice_timeout DEFINE_PER_CPU;
+@@ -38,6 +39,9 @@
+ 
+   if (sched)
+     {
++    LOG_MSG_3VAL(sched->context(),"SCHED_TASK_DES",2,0,0); 
++
++    //LOG_TRACE("SCHED_TRACER","TASK_DESCHEDULE",(Context *)sched,2,0);
+ #if 0
+       Context *owner = sched->owner();
+ 
