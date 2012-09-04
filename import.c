@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <getopt.h>
 
+#include "trace_read.h"
 #include "ftrace_read.h"
 #include "oftrace_read.h"
 #include "jtrace_read.h"
@@ -20,6 +21,8 @@
 #define JTRACE  1
 #define OFTRACE 2
 #define L4TRACE 3
+#define TRCUTILS 4
+#define XTRACE 5
 
 static int trace_type;
 static const char *relevant_pids;
@@ -28,8 +31,14 @@ static unsigned int param(int argc, char *argv[])
 {
   int c;
 
-  while ((c = getopt(argc, argv, "ojfp:")) != -1)
+  while ((c = getopt(argc, argv, "xtojfp:")) != -1)
     switch (c) {
+      case 'x':
+	trace_type = XTRACE;
+	break;
+      case 't':
+	trace_type = TRCUTILS;
+	break;
       case 'o':
 	trace_type = OFTRACE;
 	break;
@@ -111,6 +120,12 @@ int main(int argc, char *argv[])
 	break;
       case L4TRACE:
         res = l4trace_parse(f);
+	break;
+      case TRCUTILS:
+	res = trace_read(f, 0);
+	break;
+      case XTRACE:
+	res = trace_read(f, 1);
 	break;
       default:
 	fprintf(stderr,
