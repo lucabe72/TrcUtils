@@ -9,6 +9,7 @@
 #include <getopt.h>
 
 #include "ftrace_read.h"
+#include "oftrace_read.h"
 #include "jtrace_read.h"
 #include "event_create.h"
 #include "trace_write.h"
@@ -16,6 +17,7 @@
 
 #define FTRACE  0
 #define JTRACE  1
+#define OFTRACE 2
 
 static int trace_type;
 static const char *relevant_pids;
@@ -24,8 +26,11 @@ static unsigned int param(int argc, char *argv[])
 {
   int c;
 
-  while ((c = getopt(argc, argv, "jp:")) != -1)
+  while ((c = getopt(argc, argv, "ojp:")) != -1)
     switch (c) {
+      case 'o':
+	trace_type = OFTRACE;
+	break;
       case 'j':
 	trace_type = JTRACE;
 	break;
@@ -92,6 +97,9 @@ int main(int argc, char *argv[])
     switch (trace_type) {
       case FTRACE:
 	res = ftrace_parse(f);
+	break;
+      case OFTRACE:
+	res = oftrace_parse(f);
 	break;
       case JTRACE:
 	res = jtrace_read(f);
