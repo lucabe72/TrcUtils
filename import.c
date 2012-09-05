@@ -16,6 +16,7 @@
 #include "event_create.h"
 #include "trace_write.h"
 #include "pid_filter.h"
+#include "event_filter.h"
 
 #define FTRACE  0
 #define JTRACE  1
@@ -145,6 +146,7 @@ int main(int argc, char *argv[])
 	exit(-1);
     }
     while (e = evt_get()) {
+      filterEvent(e);
       trc_write(e);
       free(e);
     }
