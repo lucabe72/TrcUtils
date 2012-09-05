@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
 {
   FILE *f;
   //int start = 0, fc = 0, fo = 0, opt, i;
-  long long int time = 0, res = 0, done = 0;
+  long long int res = 0, done = 0;
   int first_param;
 
   first_param = param(argc, argv);
@@ -120,7 +120,6 @@ int main(int argc, char *argv[])
   while (!done) {
     struct event *e;
 
-    time = res + 1;
     switch (trace_type) {
       case FTRACE:
 	res = ftrace_parse(f);
