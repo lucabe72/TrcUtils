@@ -66,7 +66,7 @@ void trace_info(struct event *ev, unsigned int last_event,
   //printf("First event time: %"PRIu64"\n", trc->ev[0].time);
   //printf("Last event time: %"PRIu64"\n", trc->ev[trc->last_event].time);
   printf("\tFirst event time: %d\n", ev[0].time);
-  printf("\tLast event time: %d\n", ev[last_event].time);
+  printf("\tLast event time: %d\n", ev[last_event - 1].time);
   printf("\tNumber of servers: %u\n\n", last_server);
   for (i = 0; i < last_server; i++) {
     printf("\tServer %d: %s\n", i,
