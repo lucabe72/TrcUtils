@@ -17,6 +17,9 @@ import: import.o event_create.o event_list.o trace_write.o pid_filter.o task_nam
 visual: LDLIBS+=-lncurses
 visual: visual.o trace_read.o trace_evt_handle.o event_list.o task_names.o stats_events.o visual_gui.o
 
+pest: LDLIBS+=-lm
+pest: pest.o period_detect.o event_list.o trace_evt_handle.o task_names.o trace_read.o
+
 clean:
 	rm -f $(APPS) *.o
 
