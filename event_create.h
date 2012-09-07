@@ -4,7 +4,6 @@
 #ifndef EVENT_CREATE_H
 #define EVENT_CREATE_H
 
-struct event *evt_get(void);
 void evt_dispatch(int lpid, int rpid, int cpu,
 		  unsigned long long int time);
 void evt_force_desch(int pid, int cpu, unsigned long long int time);
