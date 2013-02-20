@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
   int first_parameter, pid;
 
   first_parameter = opts_parse(argc, argv);
-  if (first_parameter < argc - 1) {
+  if (first_parameter < argc) {
     fname = argv[first_parameter];
     f = fopen(fname, "r");
     if (f == NULL) {
@@ -57,7 +57,11 @@ int main(int argc, char *argv[])
 
       return -1;
     }
-    pid = atoi(argv[first_parameter + 1]);
+    if (first_parameter < argc - 1) {
+      pid = atoi(argv[first_parameter + 1]);
+    } else {
+      pid = 0;
+    }
   } else {
     help(argv[0]);
   }
@@ -77,9 +81,24 @@ int main(int argc, char *argv[])
 printf("Computing... %d %d | %d\n", t, told, t - told);
 
         told = t;
-        p = pdetect_period(pid);
+        if (pid) {
+          p = pdetect_period(pid);
+          printf("%d Estimated period: %d\n", t, p);
+        } else {
+          int j, todo;
+
+          printf("%d ------------------------\n", t);
+          todo = 1;
+          j = 0;
+          while(todo >= 0) {
+            todo = pid_get(j++);
+            if (todo > 0) {
+              p = pdetect_period(todo);
+              if (p) printf("%d Estimated period: %d\n", todo, p);
+            }
+          }
+        }
         pdetect_reset();
-        printf("%d Estimated period: %d\n", t, p);
       }
       free(e);
     }

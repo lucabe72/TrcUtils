@@ -275,3 +275,16 @@ int pdetect_period(int pid)
 
   return period;
 }
+
+int pid_get(int i)
+{
+  if (i <= MAX_TASKS) {
+    if (tasks[i].events) {
+      return tasks[i].pid;
+    } else {
+      return 0;
+    }
+  }
+
+  return -1;
+}
