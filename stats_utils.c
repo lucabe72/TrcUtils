@@ -52,13 +52,11 @@ static struct record *updateRecord(unsigned long int time,
   return r;
 }
 
-static unsigned long int pdf_generic(int pid, unsigned long int time,
+static void pdf_generic(int pid, unsigned long int time,
 				     unsigned long int tollerance,
 				     int type)
 {
-  int i, times = 0;
   struct record *r = record_find(pid);
-  unsigned long int highest = time;
 
   updateRecord(time, tollerance, &r[type]);
 
@@ -67,50 +65,24 @@ static unsigned long int pdf_generic(int pid, unsigned long int time,
   } else {
     task_unset_p(pid, type);
   }
-
-  for (i = 0; i < r[type].size; i++) {
-    if ((r[type].entries[i]).times >= times) {
-      times = (r[type].entries[i]).times;
-      highest = (r[type].entries[i]).time;
-    }
-  }
-
-  return highest;
 }
 
-unsigned long int pdf_response_time(int pid, unsigned long int time,
+void pdf_response_time(int pid, unsigned long int time,
 				    unsigned long int tollerance)
 {
-  return pdf_generic(pid, time, tollerance, RECORD_RESPONSE);
+  pdf_generic(pid, time, tollerance, RECORD_RESPONSE);
 }
 
-unsigned long int pdf_executions(int pid, unsigned long int time,
+void pdf_executions(int pid, unsigned long int time,
 				 unsigned long int tollerance)
 {
-  return pdf_generic(pid, time, tollerance, RECORD_EXECUTION);
+  pdf_generic(pid, time, tollerance, RECORD_EXECUTION);
 }
 
-unsigned long int pdf_intervalls(int pid, unsigned long int time,
+void pdf_intervalls(int pid, unsigned long int time,
 				 unsigned long int tollerance)
 {
-  return pdf_generic(pid, time, tollerance, RECORD_UNBLOCK);
-}
-
-//Probability of response time < time
-static float cdf_generic(int pid, unsigned long int time, int type)
-{
-  int i;
-  struct record *r = record_find(pid);
-  unsigned int commulative = 0, m = 0;
-
-  for (i = 0; i < r[type].size; i++) {
-    if ((r[type].entries[i]).time < time) {
-      commulative += (r[type].entries[i]).times;
-    }
-    m += (r[type].entries[i]).times;
-  }
-
-  return (float) commulative / m;
+  pdf_generic(pid, time, tollerance, RECORD_UNBLOCK);
 }
 
 static int entries_cmp(const void *a, const void *b)
@@ -139,31 +111,14 @@ void pmf_write(FILE *f, int pid, int type)
   }
 }
 
-float cdf_response_time(int pid, unsigned long int time)
-{
-  return cdf_generic(pid, time, RECORD_RESPONSE);
-}
-
-float cdf_executions(int pid, unsigned long int time)
-{
-  return cdf_generic(pid, time, RECORD_EXECUTION);
-}
-
-float cdf_intervalls(int pid, unsigned long int time)
-{
-  return cdf_generic(pid, time, RECORD_UNBLOCK);
-}
-
 void stats_print_int(void *l, unsigned long int time, int task,
-		     int type, unsigned long int val,
-		     unsigned long int pdf, float cdf)
+		     int type, unsigned long int val)
 {
   if (l == NULL) {
     return;
   }
   //fprintf(l, "%ld %d %s %d %ld %ld %d\n", time, task, getTaskName(task), kind_stat, time_i, pdf, cdf);
-  fprintf(l, "%ld %d %s %lu %ld %f\n", time, task, stat_name[type], val,
-	  pdf, cdf);
+  fprintf(l, "%ld %d %s %lu\n", time, task, stat_name[type], val);
 }
 
 

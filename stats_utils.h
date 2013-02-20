@@ -8,20 +8,14 @@ struct record {			//FIXME!!!
   struct record_entry *entries;
 };
 
-unsigned long int pdf_response_time(int pid, unsigned long int time,
+void pdf_response_time(int pid, unsigned long int time,
 				    unsigned long int tollerance);
-unsigned long int pdf_intervalls(int pid, unsigned long int time,
+void pdf_intervalls(int pid, unsigned long int time,
 				 unsigned long int tollerance);
-unsigned long int pdf_executions(int pid, unsigned long int time,
+void pdf_executions(int pid, unsigned long int time,
 				 unsigned long int tollerance);
-float cdf_response_time(int pid, unsigned long int time);
 
 void pmf_write(FILE *f, int pid, int type);
 
 void stats_print_int(void *l, unsigned long int time, int task,
-		     int type, unsigned long int val,
-		     unsigned long int pdf, float cdf);
-
-float cdf_executions(int pid, unsigned long int time);
-
-float cdf_intervalls(int pid, unsigned long int time);
+		     int type, unsigned long int val);

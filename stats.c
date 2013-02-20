@@ -42,34 +42,30 @@ static unsigned int opts_parse(int argc, char *argv[])
 
 static void stats_event_handle(const struct event *e)
 {
-  unsigned long int r, c, it, pdf;
-  double cdf;
+  unsigned long int r, c, it;
   static unsigned int time_back;
 
   switch (e->type) {
     case TASK_END:
       //Blocks
       r = response_time(e->task, e->time);
-      pdf = pdf_response_time(e->task, r, tolerance);
-      cdf = cdf_response_time(e->task, pdf);
-      stats_print_int(l, e->time, e->task, RESPONSE_TIME, r, pdf, cdf);
+      pdf_response_time(e->task, r, tolerance);
+      stats_print_int(l, e->time, e->task, RESPONSE_TIME, r);
       break;
     case TASK_DESCHEDULE:
       //Deschedule
       c = end_execution(e->task, e->time);
       if (c > 0) {
-	pdf = pdf_executions(e->task, c, tolerance);
-	cdf = cdf_executions(e->task, pdf);
-	stats_print_int(l, e->time, e->task, EXECUTION_TIME, c, pdf, cdf);
+	pdf_executions(e->task, c, tolerance);
+	stats_print_int(l, e->time, e->task, EXECUTION_TIME, c);
       }
       break;
     case TASK_ARRIVAL:
       //Unblocks
       it = intervalls(e->task, e->time);
       if (it > 0) {
-	pdf = pdf_intervalls(e->task, it, tolerance);
-	cdf = cdf_intervalls(e->task, pdf);
-	stats_print_int(l, e->time, e->task, INTERVALL_TIME, it, pdf, cdf);
+	pdf_intervalls(e->task, it, tolerance);
+	stats_print_int(l, e->time, e->task, INTERVALL_TIME, it);
       }
       break;
     case TASK_SCHEDULE:
