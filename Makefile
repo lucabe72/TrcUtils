@@ -4,7 +4,7 @@ WARN = -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual \
 	-Wcast-align -Wwrite-strings
 CFLAGS += $(WARN) -g
 
-APPS = export stats import visual
+APPS = export stats import visual pest
 
 all: $(APPS)
 
