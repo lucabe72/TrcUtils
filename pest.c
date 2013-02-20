@@ -10,7 +10,7 @@
 #include "trace_evt_handle.h"
 #include "period_detect.h"
 
-static int analysis_period = 100;
+static int analysis_period = 200000;
 
 static void help(const char *name)
 {
