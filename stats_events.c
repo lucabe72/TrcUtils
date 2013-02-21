@@ -8,7 +8,7 @@
 #include "stats_utils.h"
 
 struct trace {
-  int name, blocks, cpus_util_size;
+  int name, blocked, cpus_util_size;
   long int start_execution;
   unsigned long int unblocks_time;
   struct record records[3];
@@ -102,9 +102,8 @@ unsigned long int end_execution(int pid, unsigned long int time)
     tasks[i].execution_total += result;
     tasks[i].execution_time += result;
 
-    if (tasks[i].blocks == 1) {
+    if (tasks[i].blocked == 1) {
       result = tasks[i].execution_time;
-      tasks[i].blocks = 0;
 
       return result;
     }
@@ -122,9 +121,13 @@ unsigned long int intervalls(int pid, unsigned long int time)
   unsigned long int result;
 
   if (i >= 0) {
+    if (tasks[i].blocked == 0) {
+      return 0;
+    }
     result = time - tasks[i].unblocks_time;
     tasks[i].unblocks_time = time;
     tasks[i].execution_time = 0;
+    tasks[i].blocked = 0;
     //first time 0, No interval
     return result;
   }
@@ -138,7 +141,7 @@ unsigned long int response_time(int pid, unsigned long int time)
   int i = containsTask(pid);
 
   if (i >= 0) {
-    tasks[i].blocks = 1;
+    tasks[i].blocked = 1;
     return time - tasks[i].unblocks_time;
   }
 
@@ -174,7 +177,7 @@ void create_task(int pid, unsigned long int time)
     tasks[size_tasks - 1].cpus_util = NULL;
     tasks[size_tasks - 1].cpus_util_size = 0;
 
-    tasks[size_tasks - 1].blocks = 0;
+    tasks[size_tasks - 1].blocked = 0;
   }
 }
 
