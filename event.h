@@ -1,3 +1,9 @@
+/*
+ * This is free software: see GPL.txt
+ */
+#ifndef EVENT_H
+#define EVENT_H
+
 #define TASK_ARRIVAL 0
 #define TASK_SCHEDULE 1
 #define TASK_DESCHEDULE 2
@@ -23,3 +29,6 @@ struct event {
   int new_dl;
   int old_dl;
 };
+
+#endif	/* EVENT_H */
+

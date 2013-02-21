@@ -10,6 +10,7 @@
 #include "event_create.h"
 #include "pid_filter.h"
 #include "l4trace_read.h"
+#include "event.h"
 
 #define MAX_CPUS 8
 
@@ -22,15 +23,10 @@ static unsigned int count;
 static struct new_pid *new_pids;
 static int *cpu_events;
 static int *last_pid_run;	// for each cpu
+static unsigned int previous_pid=0;
 
 #define dprintf(...)
 //#define dprintf printf
-
-static unsigned long long int time_convert(unsigned long s,
-					   unsigned long us)
-{
-  return ((s * 1000000) + us);
-}
 
 static int create(unsigned long long int time, int pid, const char *name,
 		  int cpu)
@@ -64,7 +60,7 @@ static int create(unsigned long long int time, int pid, const char *name,
     return 1;
   }
 }
-
+/*
 static void attributes_parse(const char *attributes, char *name,
 			     unsigned int *curr_pid, unsigned int *cpu,
 			     unsigned int *prev_pid, char *prev_state)
@@ -100,12 +96,33 @@ static void attributes_parse(const char *attributes, char *name,
     }
   }
 }
-
+*/
 static void trace(unsigned long long int time, int current_pid,
-		  const char *name, int cpu, char *event,
-		  const char *prev_name, int prev_pid, char prev_state)
+		  const char *name, int cpu, char *event)/*,
+		  const char *prev_name, int prev_pid)*/
 {
-  if (strcmp(event, "sched_wakeup:") == 0) {
+  if (strcmp(event,"00000009")==0) {
+      create(time, current_pid, name, cpu);
+    evt_activation(current_pid, cpu, time);
+  } else  
+  if (strcmp(event,"00000000")==0) {
+    evt_activation(current_pid, cpu, time);
+  } else 
+  if (strcmp(event,"00000001")==0) {
+    evt_dispatch(0,current_pid, cpu, time);
+  } else 
+  if (strcmp(event,"00000002")==0) {
+    evt_dispatch(current_pid,0, cpu, time);
+  } else
+  if (strcmp(event,"00000003")==0) {
+    evt_deactivation(current_pid, cpu, time);
+  }
+  else {
+    dprintf("Unknown event %s",event);
+  } 
+  
+/*
+  if (event==9) {
     create(time, current_pid, name, cpu);
     evt_activation(current_pid, cpu, time);
   }
@@ -127,10 +144,10 @@ static void trace(unsigned long long int time, int current_pid,
       evt_deactivation(prev_pid, cpu, time);
     }
     evt_dispatch(prev_pid, current_pid, cpu, time);
-  }
+  }*/
 }
 
-long long int ftrace_parse(FILE * f)
+long long int l4trace_parse(FILE * f)
 {
   char line[256];
   char *res;
@@ -152,26 +169,26 @@ long long int ftrace_parse(FILE * f)
   res = fgets(line, sizeof(line), f);
   if (res) {
     //char taskc[24], to, tasko[24], cstate, ostate, sched[6];
-    char taskc[24], task_name[32];
-    char event[32], attributes[256];
+    char taskc[24];
+    char event[32];
     //unsigned int cpul, cpur, cprio, oprio, opid, cpid;
-    unsigned int cpu, target_cpu, current_pid, previous_pid;
+    unsigned int cpu, current_pid;
     static int start;
-    char previous_state;
-    unsigned long s, us;
+    unsigned long us;
     int i = 0;
-
     current_time = 0;
     if (line[0] != '#') {
-      sscanf(line, "%[^[][%d]%lu.%lu:%s%[^!]",
-	     taskc, &cpu, &s, &us, event, attributes);
-      dprintf("Task %s at %lu.%lu on CPU %d does %s (%s)\n", taskc, s, us,
-	      cpu, event, attributes);
-      current_time = time_convert(s, us);
-      attributes_parse(attributes, task_name, &current_pid, &target_cpu,
-		       &previous_pid, &previous_state);
-      current_pid = filterPid(current_pid);
-      previous_pid = filterPid(previous_pid);
+      cpu=1;
+      //sscanf(line, "%[^[][%d]%lu.%lu:%s%[^!]",
+      sscanf(line, "%s %s %lu",
+	     taskc, event, &us);
+      dprintf("Task %s at %lu on CPU %d does %s\n", taskc, us,
+	      cpu, event);
+      current_time=us;
+      if (strcmp(taskc,"????")!=0)
+         sscanf(taskc, "%x", &current_pid);
+      else current_pid=0;
+      
       if (start == 0) {
 	start = 1;
 	evt_start(current_time);
@@ -184,20 +201,20 @@ long long int ftrace_parse(FILE * f)
 
       if ((current_pid != 0) && (cpu_events[cpu] == 0)) {
 	cpu_events[cpu] = 1;
-	create(current_time, current_pid, task_name, cpu);
+	create(current_time, current_pid, taskc, cpu);
 
 	last_pid_run[cpu] = current_pid;	//Last pid scheduled
 	evt_dispatch(0, current_pid, cpu, current_time);
       }
       dprintf("%s", line);
-      trace(current_time, current_pid, task_name, cpu, event, taskc,
-	    previous_pid, previous_state);
+      trace(current_time, current_pid, taskc, cpu, event);
+//, taskc,previous_pid);
+      previous_pid=current_pid;
     }
   } else {
     free(new_pids);
     free(cpu_events);
     free(last_pid_run);
   }
-
   return current_time;
 }

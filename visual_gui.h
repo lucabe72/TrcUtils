@@ -1,5 +1,8 @@
-#ifndef __STATS_GUI_LIB_H__
-#define __STATS_GUI_LIB_H__
+/*
+ * This is free software: see GPL.txt
+ */
+#ifndef VISUAL_GUI_H
+#define VISUAL_GUI_H
 
 #define REFRESH_TIME_VALUE 500000	//us
 #define REFRESH_TIME_INTERVAL 500000	//us
@@ -24,4 +27,4 @@ void updatePDFI(int pid, long long int t, int periodic);
 void updateCPUsUtil(int pid, float cpu_util, float cpu_wutil,
 		    float cpu_autil);
 
-#endif
+#endif	/* VISUAL_GUI_H */

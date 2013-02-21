@@ -1,3 +1,6 @@
+/*
+ * This is free software: see GPL.txt
+ */
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -14,6 +17,15 @@
 
 static unsigned int tolerance;
 
+static void help(const char *name)
+{
+  fprintf(stdout, "Usage:\n");
+  fprintf(stdout, "%s [options] <input file>\n\n", name);
+
+  fprintf(stdout, "-t t\tSet the tolerance\n");
+  exit(-1);
+}
+
 static unsigned int opts_parse(int argc, char *argv[])
 {
   int c;
@@ -24,7 +36,7 @@ static unsigned int opts_parse(int argc, char *argv[])
 	tolerance = atoi(optarg);
 	break;
       default:
-	exit(-1);
+	help(argv[0]);
     }
 
   return optind;
@@ -81,12 +93,16 @@ int main(int argc, char *argv[])
   int first_parameter;
 
   first_parameter = opts_parse(argc, argv);
-  fname = argv[first_parameter];
-  f = fopen(fname, "r");
-  if (f == NULL) {
-    perror(fname);
+  if (first_parameter < argc) {
+    fname = argv[first_parameter];
+    f = fopen(fname, "r");
+    if (f == NULL) {
+      perror(fname);
 
-    return -1;
+      return -1;
+    }
+  } else {
+    f = stdin;
   }
 
   initializeT(tolerance);
