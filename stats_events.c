@@ -11,7 +11,7 @@ struct trace {
   int name, blocked, cpus_util_size;
   long int start_execution;
   unsigned long int unblocks_time;
-  struct record records[3];
+  struct record *records[3];
   unsigned long int execution_total;
   unsigned long int execution_time;
   float *cpus_util;
@@ -43,7 +43,7 @@ static void utilisation_print(void *l, unsigned long int time, int task,
   fprintf(l, "%ld %d util %f %f %f\n", time, task, cpu, cpuw, cpua);
 }
 
-struct record *record_find(int pid)
+struct record **record_find(int pid)
 {
   int i = containsTask(pid);
 
@@ -163,12 +163,9 @@ void create_task(int pid, unsigned long int time)
     tasks[size_tasks - 1].p[2] = 0;
 
     tasks[size_tasks - 1].unblocks_time = time;
-    tasks[size_tasks - 1].records[0].size = 0;
-    tasks[size_tasks - 1].records[0].entries = NULL;
-    tasks[size_tasks - 1].records[1].size = 0;
-    tasks[size_tasks - 1].records[1].entries = NULL;
-    tasks[size_tasks - 1].records[2].size = 0;
-    tasks[size_tasks - 1].records[2].entries = NULL;
+    tasks[size_tasks - 1].records[0] = NULL;
+    tasks[size_tasks - 1].records[1] = NULL;
+    tasks[size_tasks - 1].records[2] = NULL;
 
     tasks[size_tasks - 1].start_execution = -1;
 

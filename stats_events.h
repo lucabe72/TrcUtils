@@ -13,7 +13,7 @@ void create_task(int pid, unsigned long int time);
 
 void task_set_p(int pid, int type);
 void task_unset_p(int pid, int type);
-struct record *record_find(int pid);
+struct record **record_find(int pid);
 
 void calculateCPUsUtil(void *f, unsigned long int time);
 

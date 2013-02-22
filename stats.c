@@ -13,7 +13,6 @@
 
 #define TIME_PERC 1000000
 
-static unsigned int tolerance;
 static int start_time, end_time;
 static int do_pmf;
 static int print_all;
@@ -75,14 +74,14 @@ static void stats_event_handle(const struct event *e)
     case TASK_END:
       //Blocks
       r = response_time(e->task, e->time);
-      pdf_response_time(e->task, r, tolerance);
+      pdf_response_time(e->task, r);
       if (print_all) stats_print_int(l, e->time, e->task, RESPONSE_TIME, r);
       break;
     case TASK_DESCHEDULE:
       //Deschedule
       c = end_execution(e->task, e->time);
       if (c > 0) {
-	pdf_executions(e->task, c, tolerance);
+	pdf_executions(e->task, c);
 	if (print_all) stats_print_int(l, e->time, e->task, EXECUTION_TIME, c);
       }
       break;
@@ -90,7 +89,7 @@ static void stats_event_handle(const struct event *e)
       //Unblocks
       it = intervalls(e->task, e->time);
       if (it > 0) {
-	pdf_intervalls(e->task, it, tolerance);
+	pdf_intervalls(e->task, it);
 	if (print_all) stats_print_int(l, e->time, e->task, INTERVALL_TIME, it);
       }
       break;
