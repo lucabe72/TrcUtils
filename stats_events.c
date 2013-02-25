@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "tasks.h"
-#include "stats_utils.h"
+#include "stats_events.h"
 
 struct task_stats {
   int blocked, cpus_util_size;
