@@ -28,7 +28,7 @@ static void help(const char *name)
   fprintf(stdout, "-f <file> \tOutput file\n");
   fprintf(stdout, "-p \tGenerate PFMs as output\n");
   fprintf(stdout, "-t \tPrint response, execution and inter-arrival times\n");
-  fprintf(stdout, "-t \tPrint utilisation\n");
+  fprintf(stdout, "-u \tPrint utilisation\n");
   fprintf(stdout, "-s t\tStart time\n");
   fprintf(stdout, "-e t\tEnd time\n");
   exit(-1);
