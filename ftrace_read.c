@@ -10,7 +10,7 @@
 #include "tasks.h"
 #include "event_create.h"
 #include "pid_filter.h"
-#include "l4trace_read.h"
+#include "ftrace_read.h"
 
 #define MAX_CPUS 8
 

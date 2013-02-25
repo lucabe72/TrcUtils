@@ -10,6 +10,7 @@
 #include "event.h"
 #include "event_list.h"
 #include "task_names.h"
+#include "jtrace_read.h"
 
 #define JJOB_ARRIVAL		0
 #define JTASK_EXECUTION		1
