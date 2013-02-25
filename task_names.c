@@ -4,55 +4,54 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "tasks.h"
 #include "task_names.h"
 
-#define MAX_TASKS 1024
+static struct task_set *ts;
 
-struct task {
-  char *name;
-  int cpu;
-  int pid;
-};
+static void task_name_init(void)
+{
+  ts = taskset_init();
+}
 
-static struct task task[MAX_TASKS];
+static void task_name_check(void)
+{
+  if (ts == NULL) {
+    task_name_init();
+  }
+}
 
 void name_register(int pid, int cpu, const char *name)
 {
-  int i;
-
-  for (i = 0; i < MAX_TASKS; i++) {
-    if (task[i].name == NULL) {
-      task[i].name = strdup(name);
-      task[i].pid = pid;
-      task[i].cpu = cpu;
-
-      return;
-    }
-  }
+  task_name_check();
+  taskset_add_task(ts, pid, cpu, strdup(name));
 }
 
 const char *name_get(int pid, int cpu)
 {
-  int i;
-
-  for (i = 0; i < MAX_TASKS; i++) {
-    if (task[i].name && (task[i].cpu == cpu) && (task[i].pid == pid)) {
-      return task[i].name;
-    }
-  }
-
-  return NULL;
+  task_name_check();
+  return taskset_find_task(ts, pid, cpu);
 }
 
-int task_ith(int i, int cpu)
+int task_ith(unsigned int i, int cpu)
 {
-  int j, cnt = 0;
+  unsigned int j = 0, cnt = 0, done = 0;
 
-  for (j = 0; j < MAX_TASKS; j++) {
-    if (task[j].name && (task[j].cpu == cpu)) {
-      if (cnt++ == i) {
-	return task[j].pid;
+  task_name_check();
+  while (!done) {
+    unsigned int pid;
+    int task_cpu;
+    const char *c = taskset_nth_task(ts, j, &pid, &task_cpu);
+
+    if (c) {
+      if (task_cpu == cpu) {
+        if (cnt++ == i) {
+	  return pid;
+        }
       }
+      j++;
+    } else {
+      done = 1;
     }
   }
 
