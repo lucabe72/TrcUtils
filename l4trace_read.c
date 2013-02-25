@@ -14,7 +14,6 @@
 
 #define MAX_CPUS 8
 
-static struct new_pid *new_pids;
 static int *cpu_events;
 static int *last_pid_run;	// for each cpu
 static unsigned int previous_pid=0;
@@ -212,7 +211,6 @@ long long int l4trace_parse(FILE * f)
       previous_pid=current_pid;
     }
   } else {
-    free(new_pids);
     free(cpu_events);
     free(last_pid_run);
   }
