@@ -71,7 +71,7 @@ void *taskset_nth_task(const struct task_set *p, unsigned int i, unsigned int *p
       *cpu = p->tasks[i].cpu;
     }
 
-    return &p->tasks[i];
+    return p->tasks[i].attributes;
   }
 
   return NULL;

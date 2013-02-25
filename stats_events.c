@@ -199,6 +199,7 @@ void calculateCPUsUtil(void *l, unsigned long int time)
       a /= stat->cpus_util_size;
     //encod_stats_cpu(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
       utilisation_print(l, time, pid, t, w, a);
+      i++;
     } else {
       done = 1;
     }
