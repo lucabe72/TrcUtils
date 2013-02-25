@@ -7,19 +7,13 @@
 #include <malloc.h>
 #include <unistd.h>
 
+#include "tasks.h"
 #include "event_create.h"
 #include "pid_filter.h"
 #include "l4trace_read.h"
 
 #define MAX_CPUS 8
 
-struct new_pid {
-  int pid;
-  int cpu;
-};
-
-static unsigned int count;
-static struct new_pid *new_pids;
 static int *cpu_events;
 static int *last_pid_run;	// for each cpu
 
@@ -32,28 +26,34 @@ static unsigned long long int time_convert(unsigned long s,
   return ((s * 1000000) + us);
 }
 
-static int create(unsigned long long int time, int pid, const char *name,
+static int create(unsigned long long int time, unsigned int pid, const char *name,
 		  int cpu)
 {
-  unsigned int i, found = 0, existing = 0;
+  unsigned int i = 0, found = 0, existing = 0;
+  static struct task_set *ts;
 
+  if (ts == NULL) {
+    ts = taskset_init();
+  }
 //if (time != current_time) abort();
-  for (i = 0; i < count; i++) {
-    if (pid == new_pids[i].pid) {
-      existing = 1;
-      if (cpu == new_pids[i].cpu) {
-	found = 1;
-	break;
+  while(!found) {
+    unsigned int task_pid;
+    int task_cpu;
+   
+    if (taskset_nth_task(ts, i++, &task_pid, &task_cpu)) { 
+      if (pid == task_pid) {
+        existing = 1;
+        if (cpu == task_cpu) {
+          found = 1;
+        }
       }
+    } else {
+      found = 2;
     }
   }
-  if (found == 0) {
+  if (found == 2) {
     //create
-    new_pids =
-	(struct new_pid *) realloc(new_pids,
-				   ++count * sizeof(struct new_pid));
-    new_pids[count - 1].pid = pid;
-    new_pids[count - 1].cpu = cpu;
+    taskset_add_task(ts, pid, cpu, (void *)1);
 
     evt_creation(pid, name, cpu, time);
     if (!existing)
@@ -194,7 +194,6 @@ long long int ftrace_parse(FILE * f)
 	    previous_pid, previous_state);
     }
   } else {
-    free(new_pids);
     free(cpu_events);
     free(last_pid_run);
   }
