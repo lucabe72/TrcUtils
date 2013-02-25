@@ -16,5 +16,6 @@ void task_unset_p(int pid, int type);
 struct record **record_find(int pid);
 
 void calculateCPUsUtil(void *f, unsigned long int time);
+void stats_init(void);
 
 #endif	/* STATS_EVENTS_H */

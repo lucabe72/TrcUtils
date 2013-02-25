@@ -5,10 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "tasks.h"
 #include "stats_utils.h"
 
-struct trace {
-  int name, blocked, cpus_util_size;
+struct task_stats {
+  int blocked, cpus_util_size;
   long int start_execution;
   unsigned long int unblocks_time;
   struct record *records[3];
@@ -18,20 +19,7 @@ struct trace {
   int p[3];
 };
 
-static struct trace *tasks;
-static int size_tasks;
-
-static int containsTask(int pid)
-{
-  int i;
-
-  for (i = 0; i < size_tasks; i++) {
-    if (tasks[i].name == pid) {
-      return i;
-    }
-  }
-  return -1;
-}
+static struct task_set *ts;
 
 static void utilisation_print(void *l, unsigned long int time, int task,
 		       float cpu, float cpuw, float cpua)
@@ -45,65 +33,65 @@ static void utilisation_print(void *l, unsigned long int time, int task,
 
 struct record **record_find(int pid)
 {
-  int i = containsTask(pid);
+  struct task_stats *stat = taskset_find_task(ts, pid, -1);
 
-  if (i < 0) {
+  if (stat == NULL) {
     return NULL;
   }
 
-  return tasks[i].records;
+  return stat->records;
 }
 
 void task_set_p(int pid, int type)
 {
-  int i = containsTask(pid);
+  struct task_stats *stat = taskset_find_task(ts, pid, -1);
 
-  if (i < 0) {
+  if (stat == NULL) {
     return;
   }
 
-  tasks[i].p[type] = 1;
+  stat->p[type] = 1;
 }
 
 void task_unset_p(int pid, int type)
 {
-  int i = containsTask(pid);
+  struct task_stats *stat = taskset_find_task(ts, pid, -1);
 
-  if (i < 0) {
+  if (stat == NULL) {
     return;
   }
 
-  tasks[i].p[type] = 0;
+  stat->p[type] = 0;
 }
 
 void start_execution(int pid, unsigned long int time)
 {
-  int i = containsTask(pid);
+  struct task_stats *stat = taskset_find_task(ts, pid, -1);
 
-  if (i >= 0) {
-    if (tasks[i].start_execution >= 0) {
+  if (stat) {
+    if (stat->start_execution >= 0) {
       fprintf(stderr,
 	      "Scheduling task %d with last scheduling time = %ld!!!\n",
-	      pid, tasks[i].start_execution);
+	      pid, stat->start_execution);
       exit(-1);
     }
-    tasks[i].start_execution = time;
+    stat->start_execution = time;
   }
 }
 
 unsigned long int end_execution(int pid, unsigned long int time)
 {
-  int i = containsTask(pid);
+  struct task_stats *stat = taskset_find_task(ts, pid, -1);
   unsigned long int result;
 
-  if (i >= 0) {
-    result = time - tasks[i].start_execution;
-    tasks[i].start_execution = -1;
-    tasks[i].execution_total += result;
-    tasks[i].execution_time += result;
+  if (stat) {
+    result = time - stat->start_execution;
+    stat->start_execution = -1;
+    stat->execution_total += result;
+    stat->execution_time += result;
 
-    if (tasks[i].blocked == 1) {
-      result = tasks[i].execution_time;
+    if (stat->blocked == 1) {
+      result = stat->execution_time;
 
       return result;
     }
@@ -117,17 +105,17 @@ unsigned long int end_execution(int pid, unsigned long int time)
 
 unsigned long int intervalls(int pid, unsigned long int time)
 {
-  int i = containsTask(pid);
+  struct task_stats *stat = taskset_find_task(ts, pid, -1);
   unsigned long int result;
 
-  if (i >= 0) {
-    if (tasks[i].blocked == 0) {
+  if (stat) {
+    if (stat->blocked == 0) {
       return 0;
     }
-    result = time - tasks[i].unblocks_time;
-    tasks[i].unblocks_time = time;
-    tasks[i].execution_time = 0;
-    tasks[i].blocked = 0;
+    result = time - stat->unblocks_time;
+    stat->unblocks_time = time;
+    stat->execution_time = 0;
+    stat->blocked = 0;
     //first time 0, No interval
     return result;
   }
@@ -138,72 +126,86 @@ unsigned long int intervalls(int pid, unsigned long int time)
 
 unsigned long int response_time(int pid, unsigned long int time)
 {
-  int i = containsTask(pid);
+  struct task_stats *stat = taskset_find_task(ts, pid, -1);
 
-  if (i >= 0) {
-    tasks[i].blocked = 1;
-    return time - tasks[i].unblocks_time;
+  if (stat) {
+    stat->blocked = 1;
+    return time - stat->unblocks_time;
   }
 
   abort();
   return -1;
 }
 
-void create_task(int pid, unsigned long int time)
+int create_task(int pid, unsigned long int time)
 {
-  if (containsTask(pid) == -1) {
+  struct task_stats *stat = taskset_find_task(ts, pid, -1);
 
-    tasks =
-	(struct trace *) realloc(tasks,
-				 ++size_tasks * sizeof(struct trace));
-    tasks[size_tasks - 1].name = pid;
+  if (stat == NULL) {
+    stat = malloc(sizeof(struct task_stats));
+    if (stat == NULL) {
+      return -1;
+    }
+    stat->p[0] = 0;
+    stat->p[1] = 0;
+    stat->p[2] = 0;
 
-    tasks[size_tasks - 1].p[0] = 0;
-    tasks[size_tasks - 1].p[1] = 0;
-    tasks[size_tasks - 1].p[2] = 0;
+    stat->unblocks_time = time;
+    stat->records[0] = NULL;
+    stat->records[1] = NULL;
+    stat->records[2] = NULL;
 
-    tasks[size_tasks - 1].unblocks_time = time;
-    tasks[size_tasks - 1].records[0] = NULL;
-    tasks[size_tasks - 1].records[1] = NULL;
-    tasks[size_tasks - 1].records[2] = NULL;
+    stat->start_execution = -1;
 
-    tasks[size_tasks - 1].start_execution = -1;
+    stat->execution_total = 0;
+    stat->execution_time = 0;
+    stat->cpus_util = NULL;
+    stat->cpus_util_size = 0;
 
-    tasks[size_tasks - 1].execution_total = 0;
-    tasks[size_tasks - 1].execution_time = 0;
-    tasks[size_tasks - 1].cpus_util = NULL;
-    tasks[size_tasks - 1].cpus_util_size = 0;
-
-    tasks[size_tasks - 1].blocked = 0;
+    stat->blocked = 0;
+    taskset_add_task(ts, pid, -1, stat);
   }
+
+  return 0;
 }
 
 void calculateCPUsUtil(void *l, unsigned long int time)
 {
-  int i;
+  int i = 0;
+  int done = 0;
 
-  for (i = 0; i < size_tasks; i++) {
-    float t = tasks[i].execution_total, a = 0, w = 100;
-    int j;
+  while (!done) {
+    unsigned int pid;
+    struct task_stats *stat = taskset_nth_task(ts, i, &pid, NULL);
 
-    tasks[i].execution_total = 0;
-    t = (t / time) * 100.0;
-    printf("Util %d (%d) = %f\n", i, tasks[i].name, t);
-    tasks[i].cpus_util =
-	(float *) realloc(tasks[i].cpus_util,
-			  ++tasks[i].cpus_util_size * sizeof(float));
-    (tasks[i].cpus_util)[tasks[i].cpus_util_size - 1] = t;
+    if (stat) {
+      float t = stat->execution_total, a = 0, w = 100;
+      int j;
 
-    for (j = 0; j < tasks[i].cpus_util_size; j++) {
-      a += (tasks[i].cpus_util)[j];
-      if ((tasks[i].cpus_util)[j] < w) {
-	w = (tasks[i].cpus_util)[j];
+      stat->execution_total = 0;
+      t = (t / time) * 100.0;
+      printf("Util %d (%d) = %f\n", i, pid, t);
+      stat->cpus_util =
+	(float *) realloc(stat->cpus_util,
+			  ++stat->cpus_util_size * sizeof(float));
+      stat->cpus_util[stat->cpus_util_size - 1] = t;
+
+      for (j = 0; j < stat->cpus_util_size; j++) {
+        a += (stat->cpus_util)[j];
+        if ((stat->cpus_util)[j] < w) {
+          w = (stat->cpus_util)[j];
+        }
       }
-    }
-    a /= tasks[i].cpus_util_size;
+      a /= stat->cpus_util_size;
     //encod_stats_cpu(l, time, tasks[i].name, CPU_UTILIZ, t, w, a);
-    utilisation_print(l, time, tasks[i].name, t, w, a);
+      utilisation_print(l, time, pid, t, w, a);
+    } else {
+      done = 1;
+    }
   }
 }
 
-
+void stats_init(void)
+{
+  ts = taskset_init();
+}

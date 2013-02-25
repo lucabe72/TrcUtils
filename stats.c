@@ -153,6 +153,7 @@ int main(int argc, char *argv[])
     f = stdin;
   }
 
+  stats_init();
   done = 0;
   while (!done) {
     res = trace_read_event(f, start_time, end_time);
