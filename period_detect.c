@@ -263,6 +263,7 @@ int pdetect_period(int pid)
 #endif /* DEBUG */
 
   period = period_detect(power, freq_max, freq_min, freq_delta);
+  free(power);
 
   return period;
 }
