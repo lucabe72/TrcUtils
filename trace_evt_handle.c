@@ -5,17 +5,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "tasks.h"
 #include "trace_read.h"
 #include "event.h"
 #include "event_list.h"
 #include "task_names.h"
 #include "trace_evt_handle.h"
-
-struct server {
-  char *name;
-  int id;
-  int cpu;
-};
 
 #define TASKS       100
 #define MAX_EVENTS 100000
@@ -25,25 +20,15 @@ struct server {
 static int last_server[MAX_CPUS];
 static int max;
 
-static int srv_find(struct server s[], int id, int cpu)
-{
-  int i = 0;
-
-  for (; i < MAX_SERVERS; i++) {
-    if (s[i].id == id && s[i].cpu == cpu && s[i].name != NULL) {
-      return i;
-    }
-  }
-
-  return -1;
-}
-
 int trace_read_event(void *h, int start, int end)
 {
   int type, time, task, cpu, res, old_dl = 0, new_dl = 0;
-  static struct server priv_srv[MAX_SERVERS];
-  static int last_priv_server;
+  static struct task_set *priv_ts;
   FILE *f = h;
+
+  if (priv_ts == NULL) {
+    priv_ts = taskset_init();
+  }
 
   res = trace_common(f, &type, &time, &task, &cpu);
   if (res < 0) {
@@ -84,29 +69,25 @@ int trace_read_event(void *h, int start, int end)
       if (time >= start) {
 	evt_store(type, time, task, cpu);
 	if (name_get(task, cpu) == NULL) {
-	  int sid;
+	  const char *tname;
 
-	  sid = srv_find(priv_srv, task, cpu);
-	  if (sid < 0) {
+          tname = taskset_find_task(priv_ts, task, cpu);
+	  if (tname == NULL) {
 	    fprintf(stderr,
 		    "[%d] Error: cannot find task %d %d\n", time, task,
 		    cpu);
 
 	    return -3;
 	  }
-	  name_register(task, cpu, priv_srv[sid].name);
+	  name_register(task, cpu, tname);
 	  last_server[cpu]++;
 	}
       }
       break;
     case TASK_NAME:
-      priv_srv[last_priv_server].name = task_name(f);
-      priv_srv[last_priv_server].id = task;
-      priv_srv[last_priv_server].cpu = cpu;
+      taskset_add_task(priv_ts, task, cpu, task_name(f));
 
       //fprintf(stderr, "cpu %d - %s\n", e->cpu, priv_srv[last_priv_server].name);
-
-      last_priv_server++;
 
       time = start;
       evt_store(type, time, task, cpu);
