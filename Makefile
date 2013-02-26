@@ -18,7 +18,7 @@ visual: LDLIBS+=-lncurses
 visual: visual.o trace_read.o trace_evt_handle.o event_list.o task_names.o stats_events.o visual_gui.o tasks.o
 
 pest: LDLIBS+=-lm
-pest: pest.o period_detect.o event_list.o trace_evt_handle.o task_names.o trace_read.o
+pest: pest.o period_detect.o event_list.o trace_evt_handle.o task_names.o trace_read.o tasks.o
 
 clean:
 	rm -f $(APPS) *.o

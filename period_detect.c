@@ -1,7 +1,9 @@
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <math.h>
 
+#include "tasks.h"
 #include "event.h"
 #include "period_detect.h"
 
@@ -11,49 +13,30 @@
 #define ALLOCATION_HUNK 1024
 #define MAX_TASKS 1024
 
-struct task {
-  int pid;
+struct task_stats {
   int *wakeup_times;
   int events;
   int table_size;
 };
 
-static struct task tasks[MAX_TASKS];	//FIXME: Why MAX_TASKS? Make it configurable!
+static struct task_set *ts;
 
-static struct task *task_find(int pid)
+static struct task_stats *task_new(int pid)
 {
-  int i;
+  struct task_stats *t;
 
-  for (i = 0; i < MAX_TASKS; i++) {
-    if (tasks[i].pid == pid) {
-      return &tasks[i];
-    }
-    if (tasks[i].pid == 0) {
-      return NULL;
-    }
+  t = malloc(sizeof(struct task_stats));
+  if (t) {
+    memset(t, 0, sizeof(struct task_stats));
+    taskset_add_task(ts, pid, -1, t);
   }
 
-  return NULL;
+  return t;
 }
 
-static struct task *task_new(int pid)
+static void task_reset(struct task_stats *t)
 {
-  int i;
-
-  for (i = 0; i < MAX_TASKS; i++) {
-    if (tasks[i].pid == 0) {
-      tasks[i].pid = pid;
-
-      return &tasks[i];
-    }
-  }
-
-  return NULL;
-}
-
-static void task_reset(int i)
-{
-  tasks[i].events = 0;
+  t->events = 0;
 }
 
 static void compute(double val, double f, double *re, double *im)
@@ -199,10 +182,13 @@ static void transf_print(double *power, double freq_max, double freq_min, double
 int pdetect_event_handle(const struct event *e)
 {
   if (e->type == TASK_ARRIVAL) {
-    struct task *t;
+    struct task_stats *t;
 
+    if (ts == NULL) {
+      ts = taskset_init();
+    }
 //fprintf(stdout, "Inserting task %d w %d\n", e->task, e->time);
-    t = task_find(e->task);
+    t = taskset_find_task(ts, e->task, -1);
     if (t == NULL) {
       t = task_new(e->task);
     }
@@ -224,17 +210,18 @@ int pdetect_event_handle(const struct event *e)
 
 void pdetect_reset(void)
 {
-  int i;
+  unsigned int i = 0;
+  struct task_stats *t;
 
-  for (i = 0; i < MAX_TASKS; i++) {
-    task_reset(i);
+  while ((t = taskset_nth_task(ts, i++, NULL, NULL))) { 
+    task_reset(t);
   }
 }
 
 int pdetect_period(int pid)
 {
   int i;
-  struct task *t;
+  struct task_stats *t;
   int transf_size;
   int period;
   double *power;
@@ -242,7 +229,11 @@ int pdetect_period(int pid)
   const double freq_max = 200.0;
   const double freq_delta = 0.1;
 
-  t = task_find(pid);
+  if (ts == NULL) {
+    return -3;
+  }
+
+  t = taskset_find_task(ts, pid, -1);
   if (t == NULL) {
     return -1;
   }
@@ -278,13 +269,15 @@ int pdetect_period(int pid)
 
 int pid_get(int i)
 {
-  if (i <= MAX_TASKS) {
-    if (tasks[i].events) {
-      return tasks[i].pid;
-    } else {
-      return 0;
-    }
+  unsigned int pid;
+  struct task_stats *t = taskset_nth_task(ts, i, &pid, NULL);
+
+  if (t == NULL) {
+    return -1;
+  }
+  if (t->events) {
+    return pid;
   }
 
-  return -1;
+  return 0;
 }
