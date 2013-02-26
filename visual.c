@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
     f = stdin;
   }
 
+  stats_init();
   initializeT(tolerance);
   done = 0;
   while (!done) {

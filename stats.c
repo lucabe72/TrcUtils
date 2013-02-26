@@ -13,9 +13,10 @@
 
 #define TIME_PERC 1000000
 
-static unsigned int tolerance;
 static int start_time, end_time;
 static int do_pmf;
+static int print_all;
+static unsigned int print_util;
 static FILE *l;
 
 static void help(const char *name)
@@ -26,6 +27,8 @@ static void help(const char *name)
   fprintf(stdout, "Options:\n");
   fprintf(stdout, "-f <file> \tOutput file\n");
   fprintf(stdout, "-p \tGenerate PFMs as output\n");
+  fprintf(stdout, "-t \tPrint response, execution and inter-arrival times\n");
+  fprintf(stdout, "-u \tPrint utilisation\n");
   fprintf(stdout, "-s t\tStart time\n");
   fprintf(stdout, "-e t\tEnd time\n");
   exit(-1);
@@ -35,7 +38,7 @@ static unsigned int opts_parse(int argc, char *argv[])
 {
   int c;
 
-  while ((c = getopt(argc, argv, "p:s:e:f:")) != -1)
+  while ((c = getopt(argc, argv, "p:s:e:f:tu:")) != -1)
     switch (c) {
       case 'f':
 	l = fopen(optarg, "w");
@@ -49,6 +52,12 @@ static unsigned int opts_parse(int argc, char *argv[])
       case 'e':
 	end_time = atoi(optarg);
 	break;
+      case 't':
+        print_all = 1;
+        break;
+      case 'u':
+        print_util = atoi(optarg);
+        break;
       default:
 	help(argv[0]);
     }
@@ -58,34 +67,30 @@ static unsigned int opts_parse(int argc, char *argv[])
 
 static void stats_event_handle(const struct event *e)
 {
-  unsigned long int r, c, it, pdf;
-  double cdf;
+  unsigned long int r, c, it;
   static unsigned int time_back;
 
   switch (e->type) {
     case TASK_END:
       //Blocks
       r = response_time(e->task, e->time);
-      pdf = pdf_response_time(e->task, r, tolerance);
-      cdf = cdf_response_time(e->task, pdf);
-      stats_print_int(l, e->time, e->task, RESPONSE_TIME, r, pdf, cdf);
+      pdf_response_time(e->task, r);
+      if (print_all) stats_print_int(l, e->time, e->task, RESPONSE_TIME, r);
       break;
     case TASK_DESCHEDULE:
       //Deschedule
       c = end_execution(e->task, e->time);
       if (c > 0) {
-	pdf = pdf_executions(e->task, c, tolerance);
-	cdf = cdf_executions(e->task, pdf);
-	stats_print_int(l, e->time, e->task, EXECUTION_TIME, c, pdf, cdf);
+	pdf_executions(e->task, c);
+	if (print_all) stats_print_int(l, e->time, e->task, EXECUTION_TIME, c);
       }
       break;
     case TASK_ARRIVAL:
       //Unblocks
       it = intervalls(e->task, e->time);
       if (it > 0) {
-	pdf = pdf_intervalls(e->task, it, tolerance);
-	cdf = cdf_intervalls(e->task, pdf);
-	stats_print_int(l, e->time, e->task, INTERVALL_TIME, it, pdf, cdf);
+	pdf_intervalls(e->task, it);
+	if (print_all) stats_print_int(l, e->time, e->task, INTERVALL_TIME, it);
       }
       break;
     case TASK_SCHEDULE:
@@ -100,9 +105,9 @@ static void stats_event_handle(const struct event *e)
       fprintf(stderr, "Unknown event %d\n", e->type);
   }
 
-  if (e->time - time_back >= TIME_PERC) {
+  if (print_util && e->time && (e->time - time_back > print_util)) {
+    calculateCPUsUtil(l, /*TIME_PERC*/ e->time - time_back);
     time_back = e->time;
-    calculateCPUsUtil(l, TIME_PERC);
   }
 }
 
@@ -148,6 +153,7 @@ int main(int argc, char *argv[])
     f = stdin;
   }
 
+  stats_init();
   done = 0;
   while (!done) {
     res = trace_read_event(f, start_time, end_time);
