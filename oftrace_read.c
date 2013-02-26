@@ -7,20 +7,13 @@
 #include <malloc.h>
 #include <unistd.h>
 
+#include "tasks.h"
 #include "event_create.h"
 #include "pid_filter.h"
 #include "oftrace_read.h"
 
 #define MAX_CPUS 8
 
-struct new_pid {
-  int pid;
-  int cpu;
-  int state;
-};
-
-static unsigned int count;
-static struct new_pid *new_pids;
 static int *cpu_events;
 static int *last_pid_run;	// for each cpu
 static int forced_deactivation_pid = -1;
@@ -34,20 +27,15 @@ static unsigned long long int time_convert(unsigned long s,
 
 static int create(long long int time, int pid, const char *name, int cpu)
 {
-  unsigned int i, found = 0;
+  static struct task_set *ts;
 
-  for (i = 0; i < count; i++) {
-    if (pid == new_pids[i].pid && cpu == new_pids[i].cpu) {
-      found = 1;
-      break;
-    }
+  if (ts == NULL) {
+    ts = taskset_init();
   }
-  if (found == 0) {
+
+  if (taskset_find_task(ts, pid, cpu) == NULL) {
     //create
-    new_pids = (struct new_pid *) realloc(new_pids, ++count * sizeof(struct new_pid));
-    new_pids[count - 1].pid = pid;
-    new_pids[count - 1].cpu = cpu;
-    new_pids[count - 1].state = 0;
+    taskset_add_task(ts, pid, cpu, (void *)1);
 
     evt_creation(pid, name, cpu, time);
     evt_activation(pid, cpu, time);
@@ -55,17 +43,6 @@ static int create(long long int time, int pid, const char *name, int cpu)
     return 0;
   } else {
     return 1;
-  }
-}
-
-static void setPidState(int pid, int cpu, int state)
-{
-  unsigned int i;
-
-  for (i = 0; i < count; i++) {
-    if (new_pids[i].pid == pid && new_pids[i].cpu == cpu) {
-      new_pids[i].state = state;
-    }
   }
 }
 
@@ -110,8 +87,6 @@ static void trace(unsigned long long int time, int cpid, char *taskc, int opid, 
     if (cpid == 0) {
       cpu_events[cpul] = 1;
     }
-    setPidState(cpid, cpul, 0);
-    setPidState(opid, cpur, 1);
     last_pid_run[cpul] = opid;      //Last pid scheduled
     evt_dispatch(cpid, opid, cpul, time);
   }
@@ -184,7 +159,6 @@ long long int oftrace_parse(FILE * f)
     }
   } else {
     current_time = -1;
-    free(new_pids);
     free(cpu_events);
     free(last_pid_run);
   }
