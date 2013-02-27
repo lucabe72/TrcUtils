@@ -4,7 +4,7 @@ WARN = -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual \
 	-Wcast-align -Wwrite-strings
 CFLAGS += $(WARN) -g
 
-APPS = export stats import visual pest
+APPS = export stats import visual pest periodic_monitor
 
 all: $(APPS)
 
@@ -19,6 +19,8 @@ visual: visual.o trace_read.o trace_evt_handle.o event_list.o task_names.o stats
 
 pest: LDLIBS+=-lm
 pest: pest.o period_detect.o event_list.o trace_evt_handle.o task_names.o trace_read.o tasks.o
+periodic_monitor: LDLIBS+=-lncurses -lm
+periodic_monitor: periodic_monitor.o period_detect.o event_list.o trace_evt_handle.o task_names.o trace_read.o tasks.o
 
 clean:
 	rm -f $(APPS) *.o
