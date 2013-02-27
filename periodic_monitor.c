@@ -84,6 +84,7 @@ static void visual_update(void)
   int p, todo;
   unsigned int j = 0, line = 0;
 
+  clear();
   todo = 1;
   while(todo >= 0) {
     todo = pid_get(j++);
