@@ -41,6 +41,14 @@ static unsigned int opts_parse(int argc, char *argv[])
   return optind;
 }
 
+static void do_period_estimation(unsigned int pid)
+{
+  int p;
+
+  p = pdetect_period(pid);
+  printf("%d Estimated period: %d\n", pid, p);
+}
+
 int main(int argc, char *argv[])
 {
   FILE *f;
@@ -76,25 +84,18 @@ int main(int argc, char *argv[])
 
       t = pdetect_event_handle(e);
       if (t - told > analysis_period) {
-        int p;
-
-printf("Computing... %d %d | %d\n", t, told, t - told);
-
         told = t;
         if (pid) {
-          p = pdetect_period(pid);
-          printf("%d Estimated period: %d\n", t, p);
+          do_period_estimation(pid);
         } else {
           int j, todo;
 
-          printf("%d ------------------------\n", t);
           todo = 1;
           j = 0;
           while(todo >= 0) {
             todo = pid_get(j++);
             if (todo > 0) {
-              p = pdetect_period(todo);
-              if (p) printf("%d Estimated period: %d\n", todo, p);
+              do_period_estimation(todo);
             }
           }
         }
