@@ -9,8 +9,15 @@
 #include "event_list.h"
 #include "trace_evt_handle.h"
 #include "period_detect.h"
+#include "tasks.h"
+
+struct task_stats {
+  int *periods;
+  int n_samples;
+};
 
 static int analysis_period = 200000;
+static struct task_set *ts;
 
 static void help(const char *name)
 {
@@ -41,12 +48,70 @@ static unsigned int opts_parse(int argc, char *argv[])
   return optind;
 }
 
+static void period_add(struct task_stats *s, int period)
+{
+  int *tmp = s->periods;
+
+  s->periods = realloc(s->periods, sizeof(int) * (s->n_samples + 1));
+  if (s->periods == NULL) {
+    s->periods = tmp;
+    return;
+  }
+  s->periods[s->n_samples] = period;
+  s->n_samples++;
+}
+
 static void do_period_estimation(unsigned int pid)
 {
   int p;
+  struct task_stats *s;
+
+  if (ts == NULL) {
+    ts = taskset_init();
+  }
 
   p = pdetect_period(pid);
-  printf("%d Estimated period: %d\n", pid, p);
+  s = taskset_find_task(ts, pid, -1);
+  if (s == NULL) {
+    if (p == 0) {
+      /* If the task is not periodic and has never been detected as periodic, skip it! */
+      return;
+    }
+    s = malloc(sizeof(struct task_stats));
+    if (s == NULL) {
+      perror("MAlloc failed!\n");
+      return;
+    }
+    memset(s, 0, sizeof(struct task_stats));
+    taskset_add_task(ts, pid, -1, s);
+  }
+  period_add(s, p);
+  //printf("%d Estimated period: %d\n", pid, p);
+}
+
+static void print_results(void)
+{
+  unsigned int i = 0, pid;
+  struct task_stats *p;
+
+  while ((p = taskset_nth_task(ts, i++, &pid, NULL))) {
+    int j;
+    double sum, sum2;
+
+    sum = 0; sum2 = 0;
+    for (j = 0; j < p->n_samples; j++) {
+      if (p->periods[j] == 0) {
+        sum = -1;
+        j = p->n_samples;
+      } else {
+        sum += p->periods[j];
+        sum2 += (double)p->periods[j] * (double)p->periods[j];
+      }
+    }
+    if (sum > 0) {
+      printf("Task %d is periodic: %lf %lf\n", pid, sum / p->n_samples, sum2 / (p->n_samples - 1) - (sum / p->n_samples) * (sum / (p->n_samples - 1)));
+    }
+  }
 }
 
 int main(int argc, char *argv[])
@@ -105,6 +170,8 @@ int main(int argc, char *argv[])
     }
     done = feof(f) || (res < 0);
   }
+
+  print_results();
 
   return 0;
 }
