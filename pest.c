@@ -17,6 +17,8 @@ struct task_stats {
   unsigned int samples;
 };
 
+static int print_all;
+static int print_stats = 1;
 static int analysis_period = 200000;
 static struct task_set *ts;
 
@@ -33,11 +35,17 @@ static unsigned int opts_parse(int argc, char *argv[])
 {
   int c;
 
-  while ((c = getopt(argc, argv, "P:h")) != -1)
+  while ((c = getopt(argc, argv, "P:vxh")) != -1)
     switch (c) {
       case 'P':
 	analysis_period = atoi(optarg);
 	break;
+      case 'v':
+        print_all = 1;
+        break;
+      case 'x':
+        print_stats = 0;
+        break;
       case 'h':
 	help(argv[0]);
 	break;
@@ -76,6 +84,7 @@ static void do_period_estimation(unsigned int pid)
   }
 
   p = pdetect_period(pid);
+  if (print_all) printf("%d Estimated period: %d\n", pid, p);
   s = taskset_find_task(ts, pid, -1);
   if (s == NULL) {
     if (p == 0) {
@@ -166,7 +175,7 @@ int main(int argc, char *argv[])
     done = feof(f) || (res < 0);
   }
 
-  print_results();
+  if (print_stats) print_results();
 
   return 0;
 }
