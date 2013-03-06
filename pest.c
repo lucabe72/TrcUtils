@@ -12,8 +12,9 @@
 #include "tasks.h"
 
 struct task_stats {
-  int *periods;
-  int n_samples;
+  double avg;
+  double m2;
+  unsigned int samples;
 };
 
 static int analysis_period = 200000;
@@ -48,17 +49,21 @@ static unsigned int opts_parse(int argc, char *argv[])
   return optind;
 }
 
-static void period_add(struct task_stats *s, int period)
+void period_add(struct task_stats *s, int p)
 {
-  int *tmp = s->periods;
+  double delta;
 
-  s->periods = realloc(s->periods, sizeof(int) * (s->n_samples + 1));
-  if (s->periods == NULL) {
-    s->periods = tmp;
+  if (s->avg < 0) return;
+  if (p == 0) {
+    if (s->avg) s->avg = -1;
+
     return;
   }
-  s->periods[s->n_samples] = period;
-  s->n_samples++;
+
+  s->samples++;
+  delta = (p - s->avg);
+  s->avg = s->avg + delta / s->samples;
+  s->m2  = s->m2  + delta * (p - s->avg);
 }
 
 static void do_period_estimation(unsigned int pid)
@@ -95,21 +100,11 @@ static void print_results(void)
   struct task_stats *p;
 
   while ((p = taskset_nth_task(ts, i++, &pid, NULL))) {
-    int j;
-    double sum, sum2;
+    if (p->avg > 0) {
+      double variance;
 
-    sum = 0; sum2 = 0;
-    for (j = 0; j < p->n_samples; j++) {
-      if (p->periods[j] == 0) {
-        sum = -1;
-        j = p->n_samples;
-      } else {
-        sum += p->periods[j];
-        sum2 += (double)p->periods[j] * (double)p->periods[j];
-      }
-    }
-    if (sum > 0) {
-      printf("Task %d is periodic: %lf %lf\n", pid, sum / p->n_samples, sum2 / (p->n_samples - 1) - (sum / p->n_samples) * (sum / (p->n_samples - 1)));
+      variance = p->m2 / (p->samples - 1);
+      printf("Task %d is periodic: %lf %lf\n", pid, p->avg, variance);
     }
   }
 }
