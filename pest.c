@@ -108,6 +108,13 @@ static void print_results(void)
   unsigned int i = 0, pid;
   struct task_stats *p;
 
+  if (ts == NULL) {
+    printf("The taskset structure does not exist...\n");
+    printf("Maybe do_period_estimation() has never been called?\n");
+    printf("(the analysis_period is shorter than the trace length)\n");
+
+    return;
+  }
   while ((p = taskset_nth_task(ts, i++, &pid, NULL))) {
     if (p->avg > 0) {
       double variance;
