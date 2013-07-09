@@ -271,8 +271,13 @@ int pdetect_period(int pid)
 int pid_get(int i)
 {
   unsigned int pid;
-  struct task_stats *t = taskset_nth_task(ts, i, &pid, NULL);
+  struct task_stats *t;
 
+  if (ts == NULL) {
+    return -2;
+  }
+
+  t = taskset_nth_task(ts, i, &pid, NULL);
   if (t == NULL) {
     return -1;
   }
