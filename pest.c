@@ -109,9 +109,7 @@ static void print_results(void)
   struct task_stats *p;
 
   if (ts == NULL) {
-    printf("The taskset structure does not exist...\n");
-    printf("Maybe do_period_estimation() has never been called?\n");
-    printf("(the analysis_period is shorter than the trace length)\n");
+    fprintf(stderr, "ERROR: the taskset structure does not exist!\n");
 
     return;
   }
@@ -121,6 +119,24 @@ static void print_results(void)
 
       variance = p->m2 / (p->samples - 1);
       printf("Task %d is periodic: %lf %lf\n", pid, p->avg, variance);
+    }
+  }
+}
+
+static void do_analysis(unsigned int pid)
+{
+  if (pid) {
+    do_period_estimation(pid);
+  } else {
+    int j, todo;
+
+    todo = 1;
+    j = 0;
+    while(todo >= 0) {
+      todo = pid_get(j++);
+      if (todo > 0) {
+        do_period_estimation(todo);
+      }
     }
   }
 }
@@ -161,20 +177,7 @@ int main(int argc, char *argv[])
       t = pdetect_event_handle(e);
       if (t - told > analysis_period) {
         told = t;
-        if (pid) {
-          do_period_estimation(pid);
-        } else {
-          int j, todo;
-
-          todo = 1;
-          j = 0;
-          while(todo >= 0) {
-            todo = pid_get(j++);
-            if (todo > 0) {
-              do_period_estimation(todo);
-            }
-          }
-        }
+        do_analysis(pid);
         pdetect_reset();
       }
       free(e);
@@ -182,7 +185,12 @@ int main(int argc, char *argv[])
     done = feof(f) || (res < 0);
   }
 
-  if (print_stats) print_results();
+  if (print_stats) {
+    if (ts == NULL) {
+      do_analysis(pid);
+    }
+    print_results();
+  }
 
   return 0;
 }
